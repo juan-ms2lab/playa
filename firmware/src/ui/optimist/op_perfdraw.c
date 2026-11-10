@@ -27,6 +27,26 @@ static void pf_sound(int32_t y, uint32_t t, const char *name, int sel, int dim)
     AA_MID(7, y + 8, tw, 22, PS, eng, ink_on(ec), ec);
     AA_MID(7 + tw, y, 240 - 14 - tw, 38, PM, name, PF_BG, pc);
 }
+/* the notes held on the keys and their chord (Optimist's op_chord.c: ch_name "Cm7", else nn_line's notes), shown a moment
+ * after the keys as Optimist's corner did; the selection's colour, the large face where it fits */
+static void pf_chord(int32_t x, int32_t y, int32_t w, int32_t h)
+{
+    char b[32];
+    b[0] = 0;
+    if (nn_vis) {
+        ch_name(b, sizeof b);
+        if (!b[0])
+            nn_line(b, sizeof b, w);
+    }
+    if (!b[0]) {
+        AA_MID(x, y, w, h, PS, "-", PF_TAG, PF_BG);
+        return;
+    }
+    if (aa_w(&AF_PM, b) <= w)
+        AA_MID(x, y, w, h, PM, b, PF_SEL, PF_BG);
+    else
+        AA_MID(x, y, w, h, PS, b, PF_SEL, PF_BG);
+}
 static void pf_paint_perf(uint32_t r)
 {
     static const char *const MODE[PERF_NMODE] = {"LAYER", "SPLIT", "BLEND", "SINGLE"};
@@ -43,8 +63,9 @@ static void pf_paint_perf(uint32_t r)
     note_name(nn, perf.split);
     AA_MID(120, 40, 120, 40, PM, nn, nc, PF_BG);
     pf_sound(80, 1, b, r == PFR_B, m == PERF_SINGLE);  /* layer B (SINGLE: shown, not playing: dim) */
-    aa_box(0, 136, 240, 34, 17, r == PFR_DR ? PF_SEL : PF_PILL, PF_BG);   /* the drum kit, the whole width */
-    AA_MID(0, 136, 240, 34, PM, d, PF_BG, r == PFR_DR ? PF_SEL : PF_PILL);
+    aa_box(0, 136, 144, 34, 17, r == PFR_DR ? PF_SEL : PF_PILL, PF_BG);   /* the drum kit, 60 % (the user, 2026-11-10) */
+    AA_MID(0, 136, 144, 34, PM, d, PF_BG, r == PFR_DR ? PF_SEL : PF_PILL);
+    pf_chord(150, 136, 90, 34);                                         /* the keys' chord beside it */
     for (k = 0; k < 4u; k++) {                                          /* KNOB 1..4: REV CHO DLY FILT, or the split's */
         cell_t c;
         int32_t x = (int32_t)k * 61;
@@ -306,7 +327,7 @@ static void pfm_draw(void)
     if (pf_page == PG_SAVE)
         for (k = 0; k < PROJ_SLOTS; k++)
             h = hu(h, (uint32_t)project_slot_used(k));
-    h = hu(hu(h, (uint32_t)(uint16_t)TSEL->p[P_LWAVE]), perf.theme);
+    h = hu(hu(hu(h, (uint32_t)(uint16_t)TSEL->p[P_LWAVE]), perf.theme), nn_vis ? nn_hash() + 1u : 0u);   /* (the chord shown) */
     h = hu(hu(hu(h, r), trk[0].engine | (uint32_t)trk[1].engine << 8),
            perf.mode | (uint32_t)perf.split << 8 | (uint32_t)perf.width << 16 | (uint32_t)perf.rev << 24);
     if (ui.sig[2] == h)

@@ -1313,8 +1313,8 @@ static void nn_post(void)               /* last, after the frame's force is spen
 {
     char b[64];
     static uint32_t w;                                  /* (the widest drawn while shown: a shorter line covers it) */
-    if (OP_FOOT)
-        return;                                         /* (the help band: the help line draws it) */
+    if (OP_FOOT || PF_FULL)
+        return;                                         /* (JTS22's pages: PERFORM shows it beside the drums, op_perfdraw.c) */                                         /* (the help band: the help line draws it) */
     if (nn_gone) {
         ui.redraw = 1;                                  /* (gone: the corner drawn again by whatever is under it; the cards and the panel over
                                                          * what is there, next frame: no black fill of the screen, that blinked ~1 s after a key, #121) */
