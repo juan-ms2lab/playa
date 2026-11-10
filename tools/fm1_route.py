@@ -73,7 +73,7 @@ def running_kind(identity: str | None, port: str = "") -> str:
         return STOCK
     if re.fullmatch(r"FM-1_0[2-9]\d", t) and t != "FM-1_099":
         return BAUDGIRL
-    if re.fullmatch(r"FM-1_7(00|[2-6]\d)", t):
+    if re.fullmatch(r"FM-1_7(00|[2-6]\d|80)", t):
         return OPTIMIST
     if re.fullmatch(r"FM-1_9\d\d", t):
         return SLOOP if re.search(r"sloop", port or "", re.I) else FELUCCA
@@ -107,7 +107,7 @@ def package_kind(raw: bytes, flash_len: int | None = None) -> PackageInfo:
         kind = P_MBOOT
     elif re.fullmatch(r"FM-1_0(0[1-9]|1\d)", product):
         kind = P_STOCK
-    elif re.fullmatch(r"FM-1_7(00|[2-6]\d)", product) and flash_len in OWN_SLOTS and own:
+    elif re.fullmatch(r"FM-1_7(00|[2-6]\d|80)", product) and flash_len in OWN_SLOTS and own:
         kind = P_OPTIMIST
     elif re.fullmatch(r"FM-1_9\d\d", product) and flash_len in OWN_SLOTS:
         kind = P_FELUCCA
@@ -236,7 +236,7 @@ def bootloader_choice(build_value: str | None, install_mboot: bool = False) -> t
 # packages is [app end, 0xE9000) and 0xE9000: the projects, and the SDK's VM with the radio calibration. A wipe here is
 # this installer's own erase of the new firmware's settings (fm1_layouts.WIPE), in the planned flash, nothing else.
 
-OWN_ID = re.compile(r"FM-1_7(00|[2-6]\d)")
+OWN_ID = re.compile(r"FM-1_7(00|[2-6]\d|80)")   # (780: PLAYA, JTS22)
 RELEASE_ID = re.compile(r"FM-1_79\d{2,}")
 
 
