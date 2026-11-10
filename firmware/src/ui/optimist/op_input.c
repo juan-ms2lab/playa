@@ -1479,6 +1479,9 @@ static void ui_input(void)
         op_clean &= ~(held | op_frame_up);
     } else if (notes) {
         op_clean &= ~(held | op_frame_up);
+#if FELUCCA_PERF
+        if (!perf_play_keys)                            /* (JTS22: off SEQ the keys only play, nothing picked) */
+#endif
         drum_hit_pick(notes);                           /* the drum track: the key's lane selected (the keys play) */
     }
     op_frame_up = 0;                                    /* (the keys are done: the knobs, SHIFT, the taps and the lights see what is down now) */
@@ -1523,6 +1526,10 @@ static void led_btn(uint8_t *nl, uint32_t b, int on) { led_put(nl, panel.btn[b],
 static void led_keys(uint8_t *nl, uint32_t m)       /* the 27 keys' LEDs (ids 14..40): key k lit by bit k of m */
 {
     uint32_t k;
+#if FELUCCA_PERF
+    if (perf_play_keys)
+        m = 0;                                          /* (JTS22 off SEQ: the keys dark, they just play) */
+#endif
     for (k = 0; k < 27u; k++)
         led_put(nl, 14u + k, (int)((m >> k) & 1u));
 }

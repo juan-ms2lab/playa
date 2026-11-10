@@ -2229,6 +2229,11 @@ static void key_down(uint32_t k)
         if (layer != LY_ROLL)
             lvl = LV_NORM;                            /* (the Optimist UI: OCT- / OCT+ held are SHIFT / SHIFT2, mute and select;
                                                        * a ghost or hard hit is entered on STEP; the ARP layer keeps its rolls') */
+#if FELUCCA_PERF
+        if (perf_play_keys && lane == DLANE_NONE && FAST_CALL(seqev, punch_key)(k) >= 0 && layer == LY_PLAY)
+            lane = (uint32_t)FAST_CALL(seqev, punch_key)(k) % DRUM_LANES;   /* (JTS22 off SEQ: a white key plays a lane) */
+        else
+#endif
         if (FAST_CALL(seqev, punch_key)(k) >= 0 && layer == LY_PLAY) {  /* the Optimist UI: a white key is a step on every page (the user, */
             kb_kind[k] = KS_UI;                       /* 2026-10-16: "while in drum mode they are always the step seq"): */
             kb_nt[k][0] = (uint8_t)LY_STEP;           /* the UI's (op_step.c step_key), as STEP's */
@@ -2244,7 +2249,11 @@ static void key_down(uint32_t k)
             FAST_CALL(seqev, roll_start)(k, t, lane, lvl);
             return;
         }
+#if FELUCCA_PERF
+        if (pick_quiet && lane != DRUM_ACC && layer == LY_PLAY && !perf_play_keys)
+#else
         if (pick_quiet && lane != DRUM_ACC && layer == LY_PLAY)
+#endif
             return;                                   /* (a pick while playing: select only; kb_kind stays NONE) */
         kb_kind[k] = KS_DRUM;
         FAST_CALL(seqev, drum_input)(lane, lvl, 0, 1);

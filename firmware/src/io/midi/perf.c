@@ -23,6 +23,9 @@ typedef struct {
 #define PERF_NTHEME 5u  /* (spec: C4, a 12-semitone blend, A low / B high) */
 static perf_t perf = PERF_DEFAULT;
 static uint16_t perf_xg = 32768u;       /* the gain the next voice_start takes (unity outside a layered press) */
+/* the keys just play (the user, 2026-11-10: on PERFORM "keyboard lights off and just play"): 1 off SEQ (the UI sets it each
+ * frame, op_perfdraw.c); the drum track's white keys then play lanes too, no step entry, no lane picked, no key lit */
+static volatile uint8_t perf_play_keys = 1;
 
 static const uint16_t PERF_QSIN[33] = {
     0, 1608, 3212, 4808, 6393, 7962, 9512, 11039, 12540, 14010, 15447, 16846, 18205, 19520, 20788, 22006, 23170,

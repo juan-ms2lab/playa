@@ -302,6 +302,7 @@ static void pf_paint(void)
 }
 static void pfm_draw(void)
 {
+    perf_play_keys = 1;                                 /* (off SEQ: the keys play, perf.c) */
     char a[14], b[14], d[14];
     uint32_t h = 0x9E5Fu + pf_page * 977u + song.sel * 31u, r = ui.row[SCR_PERF] % PFR_N, i, k;
     if (pf_page == PG_PERF && !PF_SPLITR(r) && song.sel != PF_TRKR[r] && !(ui.toast_t && pop_kind) && !op_armed())
@@ -380,6 +381,7 @@ static void pf_seq_paint(void)
 }
 static void pf_seq_draw(void)
 {
+    perf_play_keys = 0;                                 /* (SEQ: the keys are its steps and lanes) */
     const track_t *t = TDRUM;
     uint32_t h = 0x5E9u + perf.theme, k, l;
     for (l = 0; l < DRUM_LANES; l++)
