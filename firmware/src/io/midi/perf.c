@@ -18,8 +18,9 @@ typedef struct {
     uint8_t width;                      /* 0..24 semitones, the whole blend window */
     uint8_t rev;                        /* 1: B below, A above */
     uint8_t theme;                      /* the pages' colours (ui/optimist/op_perfdraw.c PF_THEMES): 0 blue, 1 monochrome, 2 cream, 3 playa, 4 rolo */
+    uint8_t cc[8];                      /* the controller knobs' CCs, K1..K8 (perf_cc), 0 = off; GLOBAL > CC 1-4, CC 5-8 */
 } perf_t;
-#define PERF_DEFAULT {PERF_BLEND, 60, 12, 0, 0}
+#define PERF_DEFAULT {PERF_BLEND, 60, 12, 0, 0, {70, 71, 72, 73, 74, 75, 76, 77}}   /* (the CCs: an MPK mini 3's K1..K8) */
 #define PERF_NTHEME 5u  /* (spec: C4, a 12-semitone blend, A low / B high) */
 static perf_t perf = PERF_DEFAULT;
 static uint16_t perf_xg = 32768u;       /* the gain the next voice_start takes (unity outside a layered press) */
@@ -60,29 +61,39 @@ static uint32_t perf_gain(uint32_t layer, uint32_t note)
     return layer ? perf_qsin((uint32_t)x) : perf_qsin(8192u - (uint32_t)x);   /* B = sin, A = cos */
 }
 
-/* A controller's knobs as the panel's encoders (the user, 2026-11-10: an MPK mini's K1..K7): CC 70..76 on any channel,
- * absolute 0..127, become encoder steps by the change from the knob's last value (its first move only sets it):
- * CC 70..73 KNOB 1..4, one step a value; CC 74 SELECT, 75 PRESETS, 76 ALGORITHM, one step every 4 values (lists).
- * The audio interrupt only adds (perf_enc_in), the main loop only reads (panel_enc): no lock. Roles: ui/panel.c EN_*. */
-#define PERF_CC0 70u
-#define PERF_NCC 7u
-static const uint8_t PERF_CC_ROLE[PERF_NCC] = {3, 4, 5, 6, 0, 2, 1};   /* EN_K1..EN_K4, EN_SELECT, EN_PRESET, EN_ALGO */
-static uint8_t perf_cc_last[PERF_NCC] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+/* A controller's knobs as the panel's encoders (the user, 2026-11-10: an MPK mini's K1..K8; "can you edit the cc for
+ * knobs 1-8"): the CC of knob k is perf.cc[k] (any channel; 0 off; GLOBAL > CC 1-4, CC 5-8), absolute 0..127, made
+ * encoder steps by the change from the knob's last value (its first move only sets it): K1..K4 KNOB 1..4 and K8 the
+ * selected track's LEVEL, a step a value; K5 SELECT, K6 PRESETS, K7 ALGORITHM, a step every 4 values (lists).
+ * The audio interrupt only adds (perf_enc_in), the main loop only reads (panel_enc, op_perf.c pf_enc): no lock.
+ * Roles: ui/panel.c EN_*, PERF_LEVEL past them. */
+#define PERF_NCC 8u
+#define PERF_LEVEL 7u
+static const uint8_t PERF_CC_ROLE[PERF_NCC] = {3, 4, 5, 6, 0, 2, 1, PERF_LEVEL};   /* EN_K1..EN_K4, EN_SELECT, EN_PRESET, EN_ALGO */
+static uint8_t perf_cc_last[PERF_NCC] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static int8_t perf_cc_rest[PERF_NCC];
-static volatile int16_t perf_enc_in[7];
-static int16_t perf_enc_seen[7];
+static uint8_t perf_cc_was[PERF_NCC];                   /* the CC each knob's last value came on (a CC changed: forgotten) */
+static volatile int16_t perf_enc_in[8];
+static int16_t perf_enc_seen[8];
 
 /* cc's value v: 1 = taken (a knob), 0 = not one of them */
 static int perf_cc(uint32_t cc, uint32_t v)
 {
-    uint32_t k = cc - PERF_CC0;
+    uint32_t k;
     int32_t d, q;
+    for (k = 0; k < PERF_NCC && (!perf.cc[k] || perf.cc[k] != cc); k++)
+        ;
     if (k >= PERF_NCC)
         return 0;
+    if (perf_cc_was[k] != cc) {                         /* (another CC than its last: a fresh start, no jump) */
+        perf_cc_was[k] = (uint8_t)cc;
+        perf_cc_last[k] = 0xFFu;
+        perf_cc_rest[k] = 0;
+    }
     if (perf_cc_last[k] != 0xFFu) {
         d = (int32_t)v - perf_cc_last[k] + perf_cc_rest[k];
-        q = k < 4u ? d : d / 4;                    /* (the lists: a step every 4 values, the rest kept) */
-        perf_cc_rest[k] = (int8_t)(d - (k < 4u ? d : q * 4));
+        q = k < 4u || k == PERF_LEVEL ? d : d / 4;   /* (the lists: a step every 4 values, the rest kept) */
+        perf_cc_rest[k] = (int8_t)(d - (k < 4u || k == PERF_LEVEL ? d : q * 4));
         perf_enc_in[PERF_CC_ROLE[k]] = (int16_t)(perf_enc_in[PERF_CC_ROLE[k]] + q);
     }
     perf_cc_last[k] = (uint8_t)v;
@@ -99,12 +110,15 @@ static int32_t perf_enc_take(uint32_t role)
 
 /* ---- the project's FX record (fx/fx_rec.c): PERF_TLV, 4 bytes MODE SPLIT WIDTH REV; none (or a damaged value) reads as
  * the defaults, so a project from before, or from a build without PERF, plays as the spec's default performance; a 5th
- * byte THEME (none: blue) */
+ * byte THEME (none: blue), then the eight knobs' CCs (none: 70..77) */
 #define PERF_TLV 0x4Fu
-#define PERF_TLV_N 5u
+#define PERF_TLV_N 13u
 static uint32_t perf_tlv(uint8_t *o)
 {
+    uint32_t k;
     o[0] = perf.mode, o[1] = perf.split, o[2] = perf.width, o[3] = perf.rev, o[4] = perf.theme;
+    for (k = 0; k < 8u; k++)
+        o[5u + k] = perf.cc[k];
     return PERF_TLV_N;
 }
 static void perf_untlv(const uint8_t *a, uint32_t n)
@@ -115,4 +129,9 @@ static void perf_untlv(const uint8_t *a, uint32_t n)
         perf.mode = a[0], perf.split = a[1], perf.width = a[2], perf.rev = a[3];
     if (n >= 5u && a[4] < PERF_NTHEME)
         perf.theme = a[4];
+    if (n >= 13u) {
+        uint32_t k;
+        for (k = 0; k < 8u; k++)
+            perf.cc[k] = a[5u + k] <= 127u ? a[5u + k] : perf.cc[k];
+    }
 }

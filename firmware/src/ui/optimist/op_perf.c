@@ -55,14 +55,15 @@ static const page_t PG_BANKS[] = {
 };
 /* (the user, 2026-11-10: "one screen for each fx (room size, delay ms etc)"; FX pressed again: the next) */
 static const uint8_t PG_B0[PG_N] = {0, 0, 10, 0, 1, 3, 5, 7, 0};  /* a page's first bank in PG_BANKS, and how many */
-static const uint8_t PG_BN[PG_N] = {0, 0, 5, 1, 2, 2, 2, 3, 0};
+static const uint8_t PG_BN[PG_N] = {0, 0, 5, 1, 2, 2, 2, 5, 0};   /* (GLOBAL's 4th and 5th: the knobs' CCs, pf_ccd) */
 #define PF_FXC(r) (pf_page == PG_FX && ((r) % 5u == 0u || (r) % 5u == 4u))   /* FX's own screens: SENDS, FILTER */
+#define PF_CC_ROW(r) (pf_page == PG_GLO && (r) % 5u >= 3u)   /* GLOBAL's CC 1-4, CC 5-8 (pf_ccd below) */
 #define PG_TRACKS(pg) ((pg) == PG_ENV || (pg) == PG_LFO || (pg) == PG_EDIT || (pg) == PG_ARP)   /* the selected track's */
 static uint8_t pf_page, pf_prow[PG_N];
 #define pf_mix (pf_page == PG_MIX)
 static const page_t *pf_bank(uint32_t r)                /* the bank of row r on a page of banks, 0 = not one */
 {
-    if (!PG_BN[pf_page] || (PG_TRACKS(pf_page) && is_drum(TSEL)) || PF_FXC(r))
+    if (!PG_BN[pf_page] || (PG_TRACKS(pf_page) && is_drum(TSEL)) || PF_FXC(r) || PF_CC_ROW(r))
         return 0;                                       /* (the drum track: its sound is the kit's, not here) */
     return &PG_BANKS[PG_B0[pf_page] + r % PG_BN[pf_page]];
 }
@@ -92,6 +93,12 @@ static const char *const N_PFTHEME[] = {"BLUE", "MONOCHROME", "CREAM", "PLAYA", 
 static const param_desc_t PF_THEME_D = PE("THEME", N_PFTHEME, 0);
 static int16_t pf_thv;
 #define PF_THEME_CELL(r, k) (pf_page == PG_GLO && (r) == 0u && (k) == 2u)
+/* GLOBAL's CC 1-4, CC 5-8: the controller knobs' CCs (perf.cc, io/midi/perf.c), named by what each knob does */
+static const param_desc_t PF_CC_D[8] = {PD("KNOB 1", F_INT, 0, 127, 70), PD("KNOB 2", F_INT, 0, 127, 71),
+                                        PD("KNOB 3", F_INT, 0, 127, 72), PD("KNOB 4", F_INT, 0, 127, 73),
+                                        PD("SELECT", F_INT, 0, 127, 74), PD("PRESETS", F_INT, 0, 127, 75),
+                                        PD("ALGO", F_INT, 0, 127, 76), PD("LEVEL", F_INT, 0, 127, 77)};
+static int16_t pf_ccv;
 /* FILT as a low-pass sweep (the user: "filter is a sweepable low pass"): 0 closed .. 100 open = the track FILTER off;
  * P_TFLT's low-pass half (-64 .. 0) underneath, its high-pass half not reached from here */
 static int16_t pf_lp;
@@ -149,6 +156,14 @@ static void pfm_cell(uint32_t r, uint32_t k, cell_t *c)
         cell_param(c, &PF_THEME_D, &pf_thv);
         return;
     }
+    if (PF_CC_ROW(r)) {                                 /* (a knob's CC: its number, OFF at 0) */
+        uint32_t i = (r % 5u - 3u) * 4u + (k & 3u);
+        pf_ccv = perf.cc[i];
+        cell_param(c, &PF_CC_D[i], &pf_ccv);
+        if (!pf_ccv)
+            str_cpy(c->val, "OFF", sizeof c->val);
+        return;
+    }
     if (pg) {
         page_cell(pg, k, c);
         return;
@@ -172,6 +187,13 @@ static void pfm_turn(uint32_t r, uint32_t k, int32_t s, int fine)
         val_turn(&PF_THEME_D, &pf_thv, k, s, fine);
         perf.theme = (uint8_t)pf_thv;
         ui.sig[2] = 0;
+        return;
+    }
+    if (PF_CC_ROW(r)) {
+        uint32_t i = (r % 5u - 3u) * 4u + (k & 3u);
+        pf_ccv = perf.cc[i];
+        val_turn(&PF_CC_D[i], &pf_ccv, k, s, fine);
+        perf.cc[i] = (uint8_t)pf_ccv;
         return;
     }
     if (pg) {
@@ -201,6 +223,12 @@ static int pf_enc(void)
 {
     uint32_t r = ui.row[SCR_PERF] % PFR_N;
     int32_t p, a, v;
+    if ((v = perf_enc_take(PERF_LEVEL)) != 0) {         /* the controller's LEVEL knob (K8): the selected track's */
+        int16_t *vp;
+        const param_desc_t *d = mix_desc(P_LEVEL, song.sel % NTRK, &vp);
+        val_turn(d, vp, 0, v, 0);
+        ui.sig[2] = 0;
+    }
     if (ui.scr == SCR_STEP && is_drum(TSEL)) {          /* SEQ: ALGORITHM the length, four bars (of four steps) a detent, 4 .. 16
                                                          * bars (the user, 2026-11-10: "default at 4, increase by 4s") */
         if ((a = panel_enc(EN_ALGO)) == 0)

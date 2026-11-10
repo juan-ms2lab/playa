@@ -216,6 +216,20 @@ static void t_knobs(void)
     send(0xB0, 73, 0);
     send(0xB0, 73, 127);
     check(perf_enc_take(6) == 127 && !ngated(&trk[0]), "CC 73: KNOB 4, the whole turn; no note, no other effect");
+    send(0xB0, 77, 40);
+    send(0xB0, 77, 45);
+    check(perf_enc_take(PERF_LEVEL) == 5, "CC 77 (K8): the selected track's LEVEL, a step a value");
+    perf.cc[0] = 20;                                     /* (GLOBAL > CC 1-4: KNOB 1 on CC 20) */
+    send(0xB0, 20, 10);
+    send(0xB0, 20, 13);
+    send(0xB0, 70, 0);
+    send(0xB0, 70, 50);
+    check(perf_enc_take(3) == 3, "KNOB 1 moved to CC 20: CC 20 turns it, CC 70 no longer");
+    perf.cc[1] = 0;
+    send(0xB0, 71, 0);
+    send(0xB0, 71, 60);
+    check(perf_enc_take(4) == 0, "a knob's CC OFF (0): nothing");
+    perf.cc[0] = 70, perf.cc[1] = 71;
 }
 static void t_budget(void)
 {
@@ -249,6 +263,11 @@ static void t_store(void)
     n = fxr_encode(rec);
     set(PERF_LAYER, 0, 0, 0);
     check(fxr_decode(rec, n, 1) && perf.mode == PERF_SINGLE, "SINGLE round-trips through the project");
+    perf.cc[3] = 99;
+    n = fxr_encode(rec);
+    perf.cc[3] = 73;
+    check(fxr_decode(rec, n, 1) && perf.cc[3] == 99, "the knobs' CCs round-trip through the project");
+    perf.cc[3] = 73;
     set(PERF_HARD, 48, 7, 1);
     n = fxr_encode(rec);
     set(PERF_LAYER, 0, 0, 0);

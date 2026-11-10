@@ -23,7 +23,7 @@ This page covers everything PLAYA changes; the sounds, engines and effects thems
 | **LFO** | LFO (2 screens) | the wave's shape; rate, wave, trigger, polarity → two destinations and amounts |
 | **EDIT** | EDIT (2 screens) | the engine's eight parameters |
 | **ARP** | ARP (2 screens) | mode, rate, octaves, gate → swing, probability, hold, order |
-| **GLO** | GLOBAL (3 screens) | tune, tempo, THEME → the compressor → the limiter |
+| **GLO** | GLOBAL (5 screens) | tune, tempo, THEME → the compressor → the limiter → MIDI CC 1–4 → MIDI CC 5–8 |
 | **SAVE** | SAVE | the performance slots |
 | **SEQ** | SEQ | the drum step sequencer |
 | **PLAY** | — | starts / stops the drum sequencer |
@@ -60,10 +60,13 @@ Default: BLEND at C4, 12 semitones. The note shows light when the mode does not 
 | Channel 1 | layers A and B, through the mode |
 | Channel 10 | the drums (GM note numbers) |
 | Sustain, pitch bend, mod wheel on channel 1 | both layers |
-| CC 70–73 (any channel) | knobs 1–4 |
-| CC 74 / 75 / 76 | SELECT / PRESETS / ALGORITHM |
+| K1–K4: CC 70–73 (any channel) | knobs 1–4 |
+| K5 / K6 / K7: CC 74 / 75 / 76 | SELECT / PRESETS / ALGORITHM |
+| K8: CC 77 | the selected track's level |
 
-USB, TRS and Bluetooth MIDI all work. An Akai MPK mini 3's knobs K1–K7 send CC 70–76 by default.
+The eight CC numbers are set on **GLOBAL → MIDI CC 1–4 and 5–8** (press GLO until "MIDI CC"): each card is named by
+what its knob does; turn it to the CC your controller sends, 0 = OFF. They are saved with the performance. The
+defaults are an Akai MPK mini 3's K1–K8. USB, TRS and Bluetooth MIDI all work.
 
 ## Voices
 

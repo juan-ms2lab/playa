@@ -22,9 +22,9 @@
 #endif
 #define FXR_HEAD (2u + FX_NSLOT)
 #ifndef PERF_TLV_ROOM
-#define PERF_TLV_ROOM 7u                                   /* io/midi/perf.c PERF_TLV: 2 + 5, room kept in every build */
+#define PERF_TLV_ROOM (FELUCCA_PERF ? 15u : 7u)             /* io/midi/perf.c PERF_TLV: 2 + 13 (a build without PERF: its first 5) */
 #endif
-#define FXR_MAX (461u + FXR_GEN_N)                     /* the stored form at its longest (FXR_HEAD + the TLVs; 120 -> 156
+#define FXR_MAX (461u + FXR_GEN_N + (FELUCCA_PERF ? 8u : 0u))   /* (PLAYA: its TLV's 8 knob CCs) */                     /* the stored form at its longest (FXR_HEAD + the TLVs; 120 -> 156
                                                         * 2026-10-13: + the further inserts' TLVs, 6 x (2 + 4), fx_slots.c
                                                         * fxs_tlv, in every build: a record from any build reads whole;
                                                         * 156 -> 168 2026-10-13: CHRS ECHO, 2 x (2 + 4); 168 -> 186

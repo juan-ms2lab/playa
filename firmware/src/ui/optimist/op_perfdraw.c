@@ -261,7 +261,8 @@ static void pf_paint_page(void)
     uint16_t ec = trk_col(sel);
     int32_t tw = aa_w(&AF_PS, TN[sel]) + 16;
     aa_box(0, 0, 240, 34, 17, PF_PILL, PF_BG);                          /* the title */
-    aa_text(12, 2, &AF_PM, pf_page == PG_FX ? PG_BANKS[PG_B0[PG_FX] + r % 5u].title : PG_NAME[pf_page], PF_BG, PF_PILL);   /* (FX: the effect's own name) */
+    aa_text(12, 2, &AF_PM, pf_page == PG_FX ? PG_BANKS[PG_B0[PG_FX] + r % 5u].title : PF_CC_ROW(r) ? "MIDI CC" : PG_NAME[pf_page],
+            PF_BG, PF_PILL);   /* (FX: the effect's own name) */
     if (PG_TRACKS(pf_page) || pf_page == PG_FX) {                       /* (the track's pages: which one) */
         aa_box(233 - tw, 6, tw, 22, 11, ec, PF_PILL);
         AA_MID(233 - tw, 6, tw, 22, PS, TN[sel], ink_on(ec), ec);
