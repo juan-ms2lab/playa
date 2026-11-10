@@ -165,41 +165,61 @@ static uint16_t playa_px(int32_t x, int32_t y)
         return ((x - 14) / 3) & 1 ? PL_RGB(255, 243, 224) : PL_RGB(18, 64, 176);   /* the towel */
     return (x * 7 + y * 3) % 11 == 0 ? PL_RGB(217, 167, 102) : PL_RGB(242, 201, 138);   /* the sand */
 }
-/* PLAYA as a national park sticker's title (the user, 2026-11-10): the letters on an arch, cream, a thick dusk outline,
- * a sunset shadow under it, spaced out */
-static void playa_glyph(int32_t x, int32_t y, char c, uint16_t col, uint16_t bg, int32_t r)
+/* PLAYA's title (the user, 2026-11-10: a national park sticker's lettering): pixel letters in the picture's own grid,
+ * 10 x 13 with 3-pixel strokes, on a stepped arch, filled with the sunset's gradient, a dusk outline, a cream die-cut
+ * border round it and a shadow under it */
+static const char *const PT_G[4][13] = {
+    {"#########.", "##########", "###....###", "###....###", "###....###", "##########", "#########.",
+     "###.......", "###.......", "###.......", "###.......", "###.......", "###......."},                /* P */
+    {"###.......", "###.......", "###.......", "###.......", "###.......", "###.......", "###.......",
+     "###.......", "###.......", "###.......", "##########", "##########", "##########"},                /* L */
+    {"...####...", "..######..", ".###..###.", ".###..###.", "###....###", "###....###", "##########",
+     "##########", "###....###", "###....###", "###....###", "###....###", "###....###"},                /* A */
+    {"###....###", "###....###", ".###..###.", ".###..###.", "..######..", "...####...", "...####...",
+     "...####...", "...####...", "...####...", "...####...", "...####...", "...####..."}};              /* Y */
+static const uint8_t PT_L[5] = {0, 1, 2, 3, 2};          /* P L A Y A */
+static const uint8_t PT_ARC[5] = {3, 1, 0, 1, 3};        /* (the arch, in the picture's pixels) */
+#define PT_X0 11                                         /* (5 letters of 10, gaps of 2: 58 wide, centred) */
+#define PT_Y0 3
+/* the letters' own pixel at (x, y) of the picture, and its row in its letter (the gradient); -1 none */
+static int32_t pt_fill(int32_t x, int32_t y)
 {
-    char s[2] = {c, 0};
-    int32_t dx, dy;
-    for (dy = -r; dy <= r; dy++)                       /* (r 0: the letter; else a ring of copies, the outline) */
-        for (dx = -r; dx <= r; dx++)
-            if (dx * dx + dy * dy <= r * r + r)
-                aa_text(x + dx, y + dy, &AF_PL, s, col, bg);
+    int32_t i = (x - PT_X0) / 12, cx = (x - PT_X0) % 12, r;
+    if (x < PT_X0 || i > 4 || cx >= 10)
+        return -1;
+    r = y - PT_Y0 - PT_ARC[i];
+    return r >= 0 && r < 13 && PT_G[PT_L[i]][r][cx] == '#' ? r : -1;
 }
-static void playa_title(void)
+static int pt_near(int32_t x, int32_t y, int32_t d)      /* a letter pixel within d (a square round it) */
 {
-    static const char T[] = "PLAYA";
-    const uint16_t SKY0 = PL_RGB(27, 16, 53), INK = PL_RGB(27, 16, 53), SUN = PL_RGB(255, 122, 79), CREAM = PL_RGB(255, 243, 224);
-    int32_t w = 0, x, i, pass;
-    char s[2] = {0, 0};
-    for (i = 0; T[i]; i++)
-        s[0] = T[i], w += aa_w(&AF_PL, s) + 6;          /* (spaced out: a sticker's lettering) */
-    w -= 6;
-    for (pass = 0; pass < 3; pass++)                    /* the shadow, the outline, the letters */
-        for (i = 0, x = 120 - w / 2; T[i]; i++) {
-            int32_t cw, mid, y;
-            s[0] = T[i];
-            cw = aa_w(&AF_PL, s);
-            mid = x + cw / 2 - 120;
-            y = 2 + mid * mid / 260;                    /* (the arch: the middle letter highest) */
-            if (pass == 0)
-                playa_glyph(x + 3, y + 4, T[i], SUN, SKY0, 3);
-            else if (pass == 1)
-                playa_glyph(x, y, T[i], INK, SKY0, 3);
-            else
-                playa_glyph(x, y, T[i], CREAM, INK, 0);
-            x += cw + 6;
-        }
+    int32_t i, j;
+    for (j = -d; j <= d; j++)
+        for (i = -d; i <= d; i++)
+            if (pt_fill(x + i, y + j) >= 0)
+                return 1;
+    return 0;
+}
+/* the title's colour at (x, y), 0xFFFF... none: 1 when it covers the pixel */
+static int pt_px(int32_t x, int32_t y, uint16_t *c)
+{
+    static const uint16_t GRAD[13] = {PL_RGB(255, 236, 140), PL_RGB(255, 236, 140), PL_RGB(255, 225, 100), PL_RGB(255, 210, 63),
+                                      PL_RGB(255, 210, 63), PL_RGB(255, 190, 60), PL_RGB(255, 165, 60), PL_RGB(255, 140, 66),
+                                      PL_RGB(255, 122, 79), PL_RGB(255, 105, 95), PL_RGB(255, 90, 110), PL_RGB(255, 79, 122),
+                                      PL_RGB(240, 70, 130)};
+    int32_t r;
+    if (y > PT_Y0 + 3 + 13 + 3 || y < PT_Y0 - 3)
+        return 0;
+    if ((r = pt_fill(x, y)) >= 0)
+        *c = GRAD[r];                                    /* the letter: the sunset, top to foot */
+    else if (pt_near(x, y, 1))
+        *c = PL_RGB(27, 16, 53);                         /* its outline */
+    else if (pt_near(x, y, 2))
+        *c = PL_RGB(255, 243, 224);                      /* the sticker's cream border */
+    else if (pt_near(x - 1, y - 1, 2))
+        *c = PL_RGB(27, 16, 53);                         /* the shadow, a pixel down and right */
+    else
+        return 0;
+    return 1;
 }
 static void playa_paint(void)
 {
@@ -207,11 +227,12 @@ static void playa_paint(void)
     for (y = 0; y < 240; y++) {
         if (y + cv_oy < 0 || y + cv_oy >= (int32_t)cv_h)
             continue;
-        for (x = 0; x < 80; x++)
-            cv_rect(x * 3, y, 3, 1, playa_px(x, y / 3));
+        for (x = 0; x < 80; x++) {
+            uint16_t c;
+            cv_rect(x * 3, y, 3, 1, pt_px(x, y / 3, &c) ? c : playa_px(x, y / 3));   /* (the title over the picture) */
+        }
     }
-    playa_title();
-    aa_text(120 - aa_w(&AF_PS, "JTS22 powered by Optimist") / 2, 70, &AF_PS, "JTS22 powered by Optimist", C_WHITE,
+    aa_text(120 - aa_w(&AF_PS, "JTS22 powered by Optimist") / 2, 66, &AF_PS, "JTS22 powered by Optimist", C_WHITE,
             PL_RGB(58, 28, 107));
 }
 #endif
