@@ -49,6 +49,13 @@ new interface. Unofficial: not made, endorsed or supported by M-VAVE or by the O
   <img src="docs/img/playa-theme-rolo.png" alt="The ROLO theme" width="180">
 </p>
 
+<p align="center">
+  <img src="docs/img/playa-chord.png" alt="PERFORM: a chord held on the keys, its name beside the drum kit" width="180">
+  <img src="docs/img/playa-presets.png" alt="The PRESETS list in the PLAYA style" width="180">
+  <img src="docs/img/playa-arp.png" alt="ARP: the arpeggiator's four cards" width="180">
+  <img src="docs/img/playa-save.png" alt="SAVE: the performance slots" width="180">
+</p>
+
 The manual is [docs/PLAYA-MANUAL.md](docs/PLAYA-MANUAL.md). The design spec is [docs/JTS22-SPEC.md](docs/JTS22-SPEC.md).
 
 ## Install
@@ -84,6 +91,23 @@ The PLAYA tests are `tests/perf_test.c` (layers, split gains, note ownership, vo
 `tests/builder_test.py` reports the new `PERF` item as not measured. A few of Optimist's own host tests already fail
 on this host without PLAYA's changes (`insend_test`, the automation CPU budget). The PROPHET engine and several
 effects are marked by Optimist as tested in the host tests only; PLAYA has been played on one FM-1.
+
+## What's where
+
+PLAYA is Optimist's tree with a few files added and some changed; everything it adds is behind the builder item `PERF`.
+
+| Path | What |
+|---|---|
+| `firmware/src/io/midi/perf.c` | the layers, LAYER / SPLIT / BLEND / SINGLE, the controller knobs (CC 70–76), the split's storage |
+| `firmware/src/ui/optimist/op_perf.c` | the PLAYA pages: one a button, their banks, the buttons and encoders |
+| `firmware/src/ui/optimist/op_perfdraw.c` | drawing PERFORM, MIX, the card pages, the ENV / LFO shapes, SAVE, the drum sequencer |
+| `firmware/src/ui/optimist/perf_aa.c`, `perf_font.h` | the anti-aliased text and pills (Golana's renderer), the generated Inter Tight faces, the themes |
+| `firmware/src/ui/splash.c` | the PLAYA boot screen (80 × 80 pixel art) |
+| `config/profiles/performance-v1.config` | the PLAYA build: what is in, what is out |
+| `tests/perf_test.c`, `tests/sim_perf_test.mjs` | PLAYA's host and simulator tests |
+| `tools/gen_aa_font.py`, `tools/aa_raster.py`, `assets/fonts/` | making the fonts (from Golana; Inter Tight, SIL OFL) |
+| `docs/PLAYA-MANUAL.md`, `docs/JTS22-SPEC.md`, `docs/img/` | the manual, the design spec, the pictures |
+| everything else | Optimist, as upstream (its own README: `docs/OPTIMIST-README.md`) |
 
 ## Credits and licence
 
