@@ -79,6 +79,10 @@ BACKEND = None                      # how the toolchain runs (tools/toolchain.py
 # form the stock updater and every installer accept (M-VAVE 0XX, Baud Girl 020-09X, Lunar 5XX, Felucca /
 # SLOOP / X0X 9XX); development builds FM-1_700, release X.Y FM-1_7(X+2)Y (release_product)
 PRODUCT = "FM-1_700"
+# PLAYA (JTS22, builder item PERF): its own identity in Optimist's 7XX family (the installers' resume and Optimist's
+# tools keep working), past every one BUILDING.md lists as in use (700, 701, 710, 711, 720..769, 777, 79XX)
+PLAYA_PRODUCT = "FM-1_780"
+PLAYA_VERSION = "PLAYA 0.1"
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/core/model.c)
 OPTIMIST_VERSION = (Path(__file__).resolve().parent.parent / "VERSION").read_text().strip()   # the one version number
 MEASURE = False                     # --measure: link past the slot and the pool (sizes only, never a package)
@@ -929,10 +933,12 @@ def main():
 
     mark(1)
     env = dict(os.environ, AC79_SDK=str(a.sdk)) if a.sdk else os.environ
-    setup_config(a.config)
+    cfg, _ = setup_config(a.config)
     BACKEND, sdk = TC.preflight(env)     # Pillow, the toolchain, the SDK files: what is missing, how to get it
     print(f"toolchain {BACKEND.describe()}")
     VERSION = f"OPTIMIST {OPTIMIST_VERSION}"     # (the screen's version: ui.c's default says the same)
+    if int(cfg.get("PERF", 0)) and not a.release:
+        PRODUCT, VERSION = PLAYA_PRODUCT, PLAYA_VERSION   # (PLAYA: its own identity and name)
     name = "felucca.fwsc"                       # (the internal name tests and tools read; see release_name)
     if a.release:
         PRODUCT = release_product(a.release)

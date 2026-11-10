@@ -29,7 +29,7 @@ import progress  # noqa: E402  (stream: the tool's output as it arrives)
 import stamp  # noqa: E402
 
 TOOL = HERE / "fm1_install.py"
-OPTIMIST_ID = re.compile(r"FM-1_7(00|[2-6]\d)|FM-1_79\d{2}(\d{4})?")   # (Optimist: 700 development, 720..769 releases;
+OPTIMIST_ID = re.compile(r"FM-1_7(00|[2-6]\d|80)|FM-1_79\d{2}(\d{4})?")   # (780: PLAYA, build.py PLAYA_PRODUCT)   # (Optimist: 700 development, 720..769 releases;
                                                         # BUILDING.md; FM-1_79: the release on fm1-base, fm1.toml id_prefix)
 RELEASE = [os.environ.get("OPTIMIST_CLASSIC") != "1"]                                        # (the release's packages: fm1-base's update tool when the FM-1 is not
                                                         # running Optimist; set_flavour)

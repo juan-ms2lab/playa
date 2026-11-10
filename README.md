@@ -62,7 +62,7 @@ python3 tools/optimist.py package --classic --profile performance-v1 --out firmw
 python3 tools/optimist.py flash --classic firmwares/optimist-*-performance-v1.fwsc   # asks before it writes
 ```
 
-Or use the [Optimist web installer](https://w0ts.github.io/optimist/webapp/editor/#install) with the `.fwsc` file.
+PLAYA's packages identify as `FM-1_780` (version "PLAYA 0.1"). Or use the [Optimist web installer](https://w0ts.github.io/optimist/webapp/editor/#install) with the `.fwsc` file.
 If an install is cut off, run it again; if the FM-1 no longer starts, hold **OCT−** while switching on (USB rescue)
 and flash again, or go back to the official firmware ([docs/guide/getting-back.md](docs/guide/getting-back.md)).
 

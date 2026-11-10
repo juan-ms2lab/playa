@@ -308,6 +308,8 @@ loader answers `ota-FM-1_700`. `optimist flash` takes only these identities.
   stock is `FM-1_0XX` (V15 is `FM-1_015`), Baud Girl `020`-`09X`, Felucca / SLOOP / X0X `9XX`. 7XX sits between them. In
   use elsewhere (thefirmwarehub.com, 2026-10-14): `FM-1_701`, `710`, `711`, `777` and seven-digit ones, so releases use the
   block 720-769.
+- PLAYA (JTS22, builder item `PERF`) is `FM-1_780` (`tools/build.py` PLAYA_PRODUCT), in the 7XX family so the
+  installers' resume and `optimist flash` accept it.
 - The update loader is Felucca's, with the same protocol: the installers resume a device left in update mode when its
   loader is `ota-FM-1_7XX` or `ota-FM-1_9XX`, and refuse any other (`foreign`). The web installer, `fm1_install.py` and
   `make_site.py` accept both ranges.
