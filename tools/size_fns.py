@@ -114,7 +114,7 @@ AUDIO_FILES = [  # (the A2DP stream's SBC encoder runs in the audio interrupt: b
                "engines/juno/eng_juno.c", "engines/noise/eng_noise.c", "engines/drone/eng_drone.c", "engines/plaits/eng_plaits.c", "engines/clipper/eng_strings.c", "engines/clipper/eng_vps.c",
                "engines/clipper/eng_terrain.c", "engines/clipper/eng_wseq.c", "engines/clipper/eng_vector.c", "engines/sid/eng_sid.c", "engines/prophet/eng_prophet.c", "engines/clipper/eng_wave.c", "engines/cs80/eng_cs80.c", "engines/stretch/eng_stretch.c",
                "fx/fx.c", "fx/punch/punch.c", "system/dual.c", "core/audio.c", "seq/seq.c", "seq/arranger.c",
-               "io/midi/midi_control.c", "io/midi/clock_sync.c", "io/midi/clock_out.c", "io/midi/midi_uart.c",
+               "io/midi/midi_control.c", "io/midi/perf.c", "io/midi/clock_sync.c", "io/midi/clock_out.c", "io/midi/midi_uart.c",
                "io/usb/usb_audio_stream.c", "seq/seq24.c", "seq/ednote.c", "seq/auto.c", "seq/auto_slot.c", "seq/auto_base.c", "drums/lane_play.c", "seq/seq_mute.c", "seq/lane_fx.c",
                "seq/gen.c",
                # the examples of CONTRIBUTING.md (EX_SQUARE, EX_GAIN, EX_NOTEGEN): the sound side, as what they show how to add

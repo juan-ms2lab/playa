@@ -345,10 +345,87 @@ static void pop_head(void)
         cv_rect(226, 4, 2, POP_HH - 3, C_WHITE);
     }
 }
+/* the list's entry idx: its name, its tag (the engine, the kit's style), its colour */
+static uint16_t pop_item(uint32_t idx, char *nm, char *en)
+{
+    uint16_t ec;
+    uint32_t eng;
+        if (pop_kind == 4u) {
+        str_cpy(nm, pop.kits[idx] < NENGINES ? ENGINES[pop.kits[idx]]->name : "ALL", sizeof nm);
+        en[0] = 0;
+        ec = pop.kits[idx] < NENGINES ? ENG_COL[pop.kits[idx]] : C_HI;
+    } else if (pop_kind == 3u) {
+        pen_name(enum_at(pen.d, pen.d->min + (int32_t)idx), nm);
+        en[0] = 0;
+        ec = pop.fr;
+    } else if (pop_kind == 2u) {
+#if FELUCCA_DRUM_KITS
+        if (pop.kits[idx] >= DRUM_KITS) {           /* a user kit: its name, "USER KIT" */
+            str_cpy(nm, UK_NAME[ukit_nth(pop.kits[idx] - DRUM_KITS) % 16u], sizeof nm);
+            str_cpy(en, "USER KIT", sizeof en);
+        } else
+#endif
+        {
+            str_cpy(nm, DRUM_KIT_NAMES[pop.kits[idx]], sizeof nm);
+            str_cpy(en, DRUM_KIT_STYLES[pop.kits[idx]], sizeof en);
+        }
+        ec = pop.fr;
+    } else {
+        uint32_t k, e = preset_at(idx, &k);
+        eng = pre_entry_of(e, k, nm);
+        pre_engine(eng, en);
+        ec = eng < NENGINES ? ENG_COL[eng] : C_GRAY;
+    }
+    return ec;
+}
+#if FELUCCA_PERF
+/* JTS22: the list in the performance look: the title pill, the rows as pills, the one playing in the selection's colour */
+static void pf_pop_paint(void)
+{
+    char t[16], nm[16], en[12];
+    uint32_t row;
+    int32_t off, ry;
+    cv_rect(0, 0, 240, pop.h, PF_BG);
+    aa_box(4, 2, 232, POP_HH - 4, (POP_HH - 4) / 2, PF_PILL, PF_BG);
+    str_cpy(t, pop_kind == 2u ? "KIT" : pop_kind == 3u ? pen.d->label : pop_kind == 4u ? "ENGINE" : pl_filt_name(), sizeof t);
+    aa_mid(16, 2, aa_w(&AF_PM, t), POP_HH - 4, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, t, PF_BG, PF_PILL);
+    if (pop.total) {
+        fmt_int(t, (int32_t)(pop.out ? 0u : pop.cur + 1u));
+        str_app(t, "/", sizeof t);
+        fmt_app(t, (int32_t)pop.total);
+        aa_text(224 - aa_w(&AF_PS, t), 2 + (POP_HH - 4 - 18) / 2, &AF_PS, t, PF_BG, PF_PILL);
+    }
+    for (row = 0, off = -(int32_t)pop.half; pop.total && row < pop.half * 2u + 1u; row++, off++) {
+        uint32_t idx = (uint32_t)(((int32_t)pop.cur + off + (int32_t)pop.total * 2) % (int32_t)pop.total);
+        uint16_t ec, pc;
+        int32_t tw;
+        ry = POP_HH + 2 + (int32_t)row * POP_RH;
+        if ((int32_t)pop.cur + off < 0 || (int32_t)pop.cur + off >= (int32_t)pop.total)
+            continue;
+        ec = pop_item(idx, nm, en);
+        pc = off == 0 && !pop.out ? PF_SEL : PF_PILL;
+        aa_box(4, ry, 232, POP_RH - 3, (POP_RH - 3) / 2, pc, PF_BG);
+        aa_box(12, ry + (POP_RH - 3) / 2 - 5, 10, 10, 5, ec, pc);        /* (the engine's colour) */
+        tw = en[0] ? aa_w(&AF_PS, en) + 8 : 0;
+        if (aa_w(&AF_PM, nm) <= 196 - tw)
+            aa_mid(30, ry, aa_w(&AF_PM, nm), POP_RH - 3, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, PF_BG, pc);
+        else
+            aa_mid(30, ry, aa_w(&AF_PS, nm), POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, PF_BG, pc);
+        if (en[0])
+            aa_mid(228 - tw, ry, tw - 8, POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, en, PF_BG, pc);
+    }
+}
+#endif
 static void pop_paint(void)                             /* the box in its own coordinates (cv_tall: taller than a canvas) */
 {
     uint32_t row;
     int32_t off, ry;
+#if FELUCCA_PERF
+    if (PF_FULL) {
+        pf_pop_paint();
+        return;
+    }
+#endif
     cv_rect(8, 0, 224, pop.h, pop.fr);                  /* the frame, the engine's colour */
     cv_rect(10, 2, 220, pop.h - 4, OP_SURF);
     pop_head();
@@ -363,32 +440,7 @@ static void pop_paint(void)                             /* the box in its own co
         ry = POP_HH + 6 + (int32_t)row * POP_RH;
         if ((int32_t)pop.cur + off < 0 || (int32_t)pop.cur + off >= (int32_t)pop.total)
             continue;                                   /* (a list stops at its ends: nothing past them, not the other end's items; the user, 2026-10-21) */
-        if (pop_kind == 4u) {
-            str_cpy(nm, pop.kits[idx] < NENGINES ? ENGINES[pop.kits[idx]]->name : "ALL", sizeof nm);
-            en[0] = 0;
-            ec = pop.kits[idx] < NENGINES ? ENG_COL[pop.kits[idx]] : C_HI;
-        } else if (pop_kind == 3u) {
-            pen_name(enum_at(pen.d, pen.d->min + (int32_t)idx), nm);
-            en[0] = 0;
-            ec = pop.fr;
-        } else if (pop_kind == 2u) {
-#if FELUCCA_DRUM_KITS
-            if (pop.kits[idx] >= DRUM_KITS) {           /* a user kit: its name, "USER KIT" */
-                str_cpy(nm, UK_NAME[ukit_nth(pop.kits[idx] - DRUM_KITS) % 16u], sizeof nm);
-                str_cpy(en, "USER KIT", sizeof en);
-            } else
-#endif
-            {
-                str_cpy(nm, DRUM_KIT_NAMES[pop.kits[idx]], sizeof nm);
-                str_cpy(en, DRUM_KIT_STYLES[pop.kits[idx]], sizeof en);
-            }
-            ec = pop.fr;
-        } else {
-            uint32_t k, e = preset_at(idx, &k);
-            eng = pre_entry_of(e, k, nm);
-            pre_engine(eng, en);
-            ec = eng < NENGINES ? ENG_COL[eng] : C_GRAY;
-        }
+        ec = pop_item(idx, nm, en);
         {
             int32_t um = 0, fm = 0;                             /* the bullet on the left (the engine's chip) becomes a star for a user preset (the engine's colour) or a favorite (amber) */
             const felucca_font_t *f;

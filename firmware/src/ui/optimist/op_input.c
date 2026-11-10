@@ -138,6 +138,11 @@ static void op_enter(uint32_t scr)
 }
 static void go_home(void)                               /* power-on, a new project: the mixer, MASTER */
 {
+#if FELUCCA_PERF
+    op_enter(SCR_PERF);                                 /* (JTS22: PERFORM is home; HOME from there: the mixer) */
+    ui.row[SCR_PERF] = 0;
+    return;
+#endif
     op_enter(SCR_HOME);
     ui.lane = 0;                                        /* (the drum track: DR itself, its kit) */
     ui.row[SCR_HOME] = (uint8_t)(MXR_T1 + song.sel);   /* (the mixer opens on the track: MASTER is above it) */
@@ -391,6 +396,10 @@ static void op_no(void)
 #if FELUCCA_SD_UI
     if (sdc_home())
         return;                                         /* (PROJECT, a card's list: up a folder, SAVES back: op_sdcard.c) */
+#endif
+#if FELUCCA_PERF
+    pf_go(PG_PERF);                                     /* (JTS22: HOME is PERFORM) */
+    return;
 #endif
     if (ui.scr == SCR_HOME)
         op_enter(SCR_SCOPE);                            /* at the root: the mixer and the scope, in turn [P] */
@@ -795,6 +804,12 @@ static void oct_tap(uint32_t b)                         /* the keyboard octave, 
             song_page_tap(b == B_OCTUP);                /* (SONG: the parts window by eight) */
         return;                                         /* (the PATTERNS row, the LFO patterns screen: nothing, the keys launch patterns) */
     }
+#if FELUCCA_PERF
+    if (ui.scr == SCR_STEP) {
+        step_scroll(b == B_OCTDN ? -1 : 1);             /* JTS22: the drums' four bars */
+        return;
+    }
+#endif
     if (is_drum(TSEL))
         return;
     oct_set(o < -3 ? -3 : o > 3 ? 3 : o);
@@ -823,6 +838,12 @@ static __attribute__((noinline)) void op_press(uint32_t b, uint32_t held)
         op_clean &= ~BIT(b);
         return;
     }
+#if FELUCCA_PERF
+    if (b == B_REC) {                                   /* JTS22: no recording (the looper: v1.5); PLAY runs the drums' steps */
+        op_clean &= ~BIT(b);
+        return;
+    }
+#endif
     if (op_combo(b, held))                              /* a locked layer let go, a lock, SAVE / SHIFT + it */
         return;
     if (st_holding() && b < NB && JUMP_FAM[b] != 0xFF) {   /* a step held + a page button: locks */
@@ -903,6 +924,10 @@ static void op_tap(uint32_t b, uint32_t id)
     const uint32_t held = op_btn_span(id, op_t0[id % 14u]);   /* (how long it was down, by the button's own times: a slow frame
                                                          * between its press and release no longer makes a tap a hold) */
     const int hold = held >= op_hold_ms();
+#if FELUCCA_PERF
+    if (!op_armed() && pf_tap(b, hold))
+        return;                                         /* JTS22: a page a button (op_perf.c) */
+#endif
     if (lay_btn_layer(b) != LY_PLAY && held > LAY_TAP_MS && !(b == B_SAVE && op_armed()))
         return;                                         /* (held: the layer was looked at, no tap) */
 #if FELUCCA_PATTERNS
@@ -1141,6 +1166,10 @@ static void op_knobs(uint32_t shift)
 #endif
     if (step_knobs())                                   /* STEP, a step held: SELECT, ALGORITHM its own */
         turned = 1;
+#if FELUCCA_PERF
+    if (pf_enc())                                       /* JTS22 PERFORM's MODE and NOTE rows (op_perf.c) */
+        turned = 1;
+#endif
     if (song_tbl_on()) {                                /* SONG's tables: the cursor, the part, the lane, the value (op_songtbl.c) */
         if (song_tbl_knobs())
             turned = 1;
@@ -1234,8 +1263,8 @@ static void op_knobs(uint32_t shift)
             continue;                                   /* REC held: its motion and locks cleared, the value stays */
         if (c.kind == CK_VAL)
             SCR->turn(row, ck, shift ? OP_RESET : s, 0);  /* SHIFT held: back to its default */
-        if (c.kind == CK_VAL && !shift)
-            pop_enum_open(row, ck);                      /* (a list value: the popup list, op_preset.c) */
+        if (c.kind == CK_VAL && !shift && !PF_FULL)
+            pop_enum_open(row, ck);                      /* (JTS22's pages: a list value steps in its card, no popup) */                      /* (a list value: the popup list, op_preset.c) */
     }
 knobs_done:
     if (turned) {
@@ -1538,6 +1567,10 @@ static int play_led(void)                               /* PLAY flashes on every
 }
 static uint32_t op_screen_btn(void)                     /* the button of what the screen shows */
 {
+#if FELUCCA_PERF
+    if (ui.scr == SCR_PERF || ui.scr == SCR_STEP)
+        return pf_btn();                                /* (JTS22: the page's button lit) */
+#endif
     static const uint8_t FAM_B[FAM_COUNT] = {[FAM_ENV] = B_ENV, [FAM_LFO] = B_LFO, [FAM_FX] = B_FX, [FAM_SCL] = B_SCL,
                                              [FAM_EDIT] = B_EDIT, [FAM_GLO] = B_GLO, [FAM_ARP] = B_ARP,
                                              [FAM_SEQ] = B_SEQ};

@@ -353,5 +353,8 @@ static const screen_t SCREENS[SCR_N] = {
     {scope_rows, scope_name, scope_cell, scope_turn, scope_yes},
     {gls_rows, gls_name, gls_cell, gls_turn, gls_yes},
     {lx_rows, lx_name, lx_cell, lx_turn, lx_yes},       /* (a lane's black key held: op_lanefx.c) */
+#if FELUCCA_PERF
+    {pfm_rows, pfm_name, pfm_cell, pfm_turn, pfm_yes},       /* JTS22 PERFORM (op_perf.c) */
+#endif
 };
 #define SCR (&SCREENS[ui.scr % SCR_N])

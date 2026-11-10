@@ -548,6 +548,10 @@ static uint32_t eng_slot_built(uint32_t uid) { return ENG_DENSE ? uid : eng_slot
 #define FELUCCA_REC_PLAIN 0                /* seq.c rec_poly: recording keeps every note played whatever the voice mode (MONO, LEGATO,
                                             * UNISON no longer cut a step to one note); an ACID part records as before (0: as before) */
 #endif
+#ifndef FELUCCA_PERF
+#define FELUCCA_PERF 0                     /* JTS22 performance: parts 1 and 2 as layers A / B on one channel, LAYER / HARD /
+                                            * BLEND split (io/midi/perf.c) */
+#endif
 #ifndef FELUCCA_MIDI_EXPR
 #define FELUCCA_MIDI_EXPR 1                /* MIDI bend, mod wheel, breath, foot, aftertouch, sustain, RPN 0
                                             * (0: notes and the panics CC 120..123 only) */

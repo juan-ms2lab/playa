@@ -2133,6 +2133,14 @@ static void seq_pick_quiet(uint32_t on) { pick_quiet = (uint8_t)(on != 0u); }
  * record notes"); the white keys stay steps */
 static volatile uint8_t step_rec_blk;
 static void seq_step_rec_black(uint32_t on) { step_rec_blk = (uint8_t)(on != 0u); }
+#if FELUCCA_PERF
+/* PERF: a panel key on track 1 or 2 while they share a channel plays the layers as a MIDI note on it would (split,
+ * blend, the pedal, ownership: io/midi/midi_control.c); kb_lay: the keys down that did */
+static int midi_layered(uint32_t ch);
+static void midi_note_on(uint32_t ch, uint32_t note, uint32_t vel);
+static void midi_note_off(uint32_t ch, uint32_t note);
+static uint32_t kb_lay;
+#endif
 static void key_down(uint32_t k)
 {
     uint32_t layer = layer_now(), sel = song.sel % NTRK, i, mc;
@@ -2280,6 +2288,15 @@ static void key_down(uint32_t k)
         }
         mc = trk_midi_ch(sel);
         in_key = (uint8_t)(k + 1u);                   /* (the arp keeps the key: arp_add, #191) */
+#if FELUCCA_PERF
+        if (sel < 2u && midi_layered(mc)) {           /* (the layers: as the keyboard on their channel) */
+            kb_lay |= 1u << k;
+            for (i = 0; i < kb_n[k]; i++) {
+                midi_note_on(mc, kb_nt[k][i], key_vel);
+                FAST_CALL(seqev, midi_key_out)(mc, kb_nt[k][i], key_vel);
+            }
+        } else
+#endif
         for (i = 0; i < kb_n[k]; i++) {
 #if FELUCCA_CHORDPLUS
             in_chord = kb_n[k] > 1u ? kb_nt[k] : 0;   /* (STRUM: the sound; MIDI out gets the chord at once) */
@@ -2342,6 +2359,16 @@ static void key_up(uint32_t k)
         return;
     case KS_NOTE:
         mc = trk_midi_ch(kb_trk[k] % NTRK);
+#if FELUCCA_PERF
+        if ((kb_lay >> k) & 1u) {                     /* (played on the layers: ended there, the pedal may hold it) */
+            kb_lay &= ~(1u << k);
+            for (i = 0; i < kb_n[k]; i++) {
+                midi_note_off(mc, kb_nt[k][i]);
+                FAST_CALL(seqev, midi_key_out)(mc, kb_nt[k][i], 0u);
+            }
+            return;
+        }
+#endif
         for (i = 0; i < kb_n[k]; i++) {
             FAST_CALL(seqev, input_off)(t, kb_nt[k][i]);
             FAST_CALL(seqev, midi_key_out)(mc, kb_nt[k][i], 0u);

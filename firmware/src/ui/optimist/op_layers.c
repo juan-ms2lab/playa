@@ -123,6 +123,10 @@ static int lay_is(uint32_t l) { return lay_now() == l; }
 static uint32_t lay_btn_layer(uint32_t b)               /* the layer button b holds, LY_PLAY none */
 {
     uint32_t l;
+#if FELUCCA_PERF
+    if (b != B_OCTDN && b != B_OCTUP && b != B_PLAY)
+        return LY_PLAY;                                 /* (JTS22: a page a button, no layer held) */
+#endif
     for (l = LY_FX; l < LY_COUNT; l++)
         if (LAYER_BTN[l] == b)
             return l == LY_OPS && !fm6_sel() ? LY_PLAY : l;   /* (ENV elsewhere: a plain button) */

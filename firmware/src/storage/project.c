@@ -969,6 +969,7 @@ static void mc_unpack(const project_t *p)
 #define PUNCH_PACK() 0
 #endif
 #if FELUCCA_MIDI_CH
+#define MIDI_CH_DEF(i) (FELUCCA_PERF && (i) == 1u ? 1u : (i) + 1u)   /* the default channel (PERF: layers A and B on 1) */
 /* the synth tracks' MIDI channels in the project's G_MIDI slot (a status, never saved before: 0 in every older project,
  * and SLOOP 2.4's MIDI OUT flag 0 / 1 there, which reads as channel 1 for part 1: its own): five bits a track, 0 = the
  * default (part i + 1), 1..16 the channel, 17 OFF. The drum track's channel is the project's G_DRCH. */
@@ -976,7 +977,7 @@ static int16_t midi_ch_pack(void)
 {
     uint32_t i, w = 0;
     for (i = 0; i < 3u; i++) {                          /* (no drums: part 4's is G_DRCH, as the drum track's) */
-        uint32_t c = (uint32_t)clamp(bp_set[BPS_CH0 + i], 0, 16), code = c == i + 1u ? 0u : c ? c : 17u;
+        uint32_t c = (uint32_t)clamp(bp_set[BPS_CH0 + i], 0, 16), code = c == MIDI_CH_DEF(i) ? 0u : c ? c : 17u;
         w |= code << (5u * i);
     }
     return (int16_t)w;
@@ -986,7 +987,7 @@ static void midi_ch_unpack(int16_t g)
     uint32_t i;
     for (i = 0; i < 3u; i++) {
         uint32_t code = ((uint32_t)(uint16_t)g >> (5u * i)) & 31u;
-        bp_set[BPS_CH0 + i] = (int16_t)(code == 0u || code > 17u ? i + 1u : code == 17u ? 0u : code);
+        bp_set[BPS_CH0 + i] = (int16_t)(code == 0u || code > 17u ? MIDI_CH_DEF(i) : code == 17u ? 0u : code);
     }
 }
 #endif

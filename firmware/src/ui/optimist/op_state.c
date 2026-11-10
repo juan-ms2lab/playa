@@ -46,9 +46,17 @@ static __attribute__((noinline)) void cv_text_mid(int32_t y, const felucca_font_
 {
     cv_text(120 - text_w(f, s) / 2, y, f, s, c);
 }
-enum { SCR_HOME, SCR_SOUND, SCR_FX, SCR_PROJECT, SCR_SYSTEM, SCR_STEP, SCR_SONG, SCR_TEMPO, SCR_SCOPE, SCR_GLOBAL, SCR_LFX, SCR_N };
+enum { SCR_HOME, SCR_SOUND, SCR_FX, SCR_PROJECT, SCR_SYSTEM, SCR_STEP, SCR_SONG, SCR_TEMPO, SCR_SCOPE, SCR_GLOBAL, SCR_LFX,
+#if FELUCCA_PERF
+       SCR_PERF,                                        /* JTS22 PERFORM: op_perf.c */
+#endif
+       SCR_N };
 static const char *const SCR_NAME[SCR_N] = {"MIX", "SOUND", "MASTER", "PROJECT", "SYSTEM", "STEPS", "SONG", "TEMPO",
-                                            "SCOPE", "GLOBAL", "LANE FX"};
+                                            "SCOPE", "GLOBAL", "LANE FX",
+#if FELUCCA_PERF
+                                            "PERFORM",
+#endif
+};
 #define OP_MSG_FRAMES 150u            /* ~2.5 s at the UI's 60 frames a second (main.c paces them at 15 ms) */
 #define OP_ARM_MS 3000u               /* an armed action waits 3 s for its YES */
 #define ARM_NONE 0xFFu
@@ -289,7 +297,11 @@ static void ui_say(const char *a, const char *b)
     n = str_len(ui.msg);
     str_cpy(ui.msg + n, b, sizeof ui.msg - n);
     ui.msg_st = (uint8_t)msg_status(a);
+#if FELUCCA_PERF
+    if (ui.toast_next || ui.scr == SCR_PERF || ui.scr == SCR_STEP) {   /* (JTS22's pages: no header or help line, a toast) */
+#else
     if (ui.toast_next) {
+#endif
         ui.toast_t = OP_TOAST_FRAMES;
         ui.toast_col = 0;
         ui.msg_t = 0;

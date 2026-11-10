@@ -237,6 +237,9 @@ static int value_long(const param_desc_t *d, int32_t v, char *b)
 #if FELUCCA_NB_LIST
 static uint32_t nb_kind(const track_t *t);              /* storage/nbank.c */
 static void nb_name(uint32_t kind, uint32_t k, char *nm);
+static uint32_t nb_slots(uint32_t kind);                /* storage/nbank.c */
+static uint32_t nb_base(uint32_t kind);
+static int nb_used(uint32_t kind, uint32_t k);
 #endif
 #if FELUCCA_SD_UI
 static const char *sdm_part_name(uint32_t k);           /* (storage/sd/sd_mode.c: a card preset's name) */
@@ -250,11 +253,12 @@ static void snd_name(uint32_t c, char *b)
         return;
     }
 #if FELUCCA_NB_LIST
-    if (!IS_DRUMK(c) && t == TSEL) {                   /* the engine's own collection (the FM6 voice packs, a received bank): the voice's name */
-        uint32_t at, r, n = nb_list(&r, ~0u, &at);
-        if (r < n) {
-            nb_list(&r, r, &at);
-            nb_name(nb_kind(t), at, b);
+    if (!IS_DRUMK(c) && nb_kind(t)) {                  /* the engine's own collection (the FM6 voice packs, a received bank): the voice's
+                                                         * name, on any track (was the selected one alone: another FM6 track read
+                                                         * INIT VOICE whatever it played; JTS22, 2026-11-10) */
+        uint32_t kind = nb_kind(t), v = (uint32_t)t->p[P_E0] - nb_base(kind);
+        if ((uint32_t)t->p[P_E0] >= nb_base(kind) && v < nb_slots(kind) && nb_used(kind, v)) {
+            nb_name(kind, v, b);
             return;
         }
     }

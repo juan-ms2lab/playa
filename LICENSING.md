@@ -157,6 +157,8 @@ assets, is entirely governed by the GPL.
 | --- | --- | --- |
 | Instrument and drum samples (Versilian Studios VSCO-2 CE, VCSL; Sonic Pi: SCRCH), and the hip-hop pack for the user sample slots cut and processed from them (`tools/gen_hiphop_pack.py`) | CC0 1.0 | `assets/samples-cc0/` (provenance in `ATTRIBUTION.txt` and `CREDITS.txt` there), `assets/hiphop-pack/` (`CREDITS.txt`) |
 | Terminus font 8x16 (ter-u16n), Copyright (C) 2020 Dimitar Toshkov Zhekov | SIL OFL 1.1 | `assets/fonts/ter-u16n.bdf`, `assets/fonts/Terminus-LICENSE.txt`; as TrueType in the shared web style: `web/style/terminus.ttf`, `web/TERMINUS-LICENSE.txt` |
+| Inter Tight font, Copyright 2022 The Inter Project Authors: the JTS22 PERFORM screens' text, rasterised into the firmware (`firmware/src/ui/optimist/perf_font.h`, made by `tools/gen_aa_font.py`; not offered as a font) | SIL OFL 1.1 | `assets/fonts/InterTight[wght].ttf`, `assets/fonts/OFL.txt`, `LICENSES/OFL-InterTight.txt` |
+| Golana (github.com/Gadlele/Golana dbae4640) by Leo Kuroshita, Hügelton Instruments: the anti-aliased font tools (`tools/gen_aa_font.py`, `tools/aa_raster.py`) and the text renderer in `firmware/src/ui/optimist/perf_aa.c` | GPL-3.0-only | those files, marked |
 | Fukiai icon font (Hügelton Instruments), web editor only | MIT | `web/fukiai.ttf`, `web/FUKIAI-LICENSE.txt` |
 | pi32v2-llvm, the compiler (Julius Vitkauskas's LLVM fork with a pi32v2 target, and his pi32v2-isa drop-in tools), not in this tree: a release asset this repository publishes, its licences inside (BUILDING.md, "The compiler") | Apache-2.0 WITH LLVM-exception; MIT-0 | the release `toolchain-pi32v2-llvm-<version>` |
 | JetBrains Mono (Regular, Medium, Bold as WOFF2), Copyright 2020 The JetBrains Mono Project Authors: once inlined in the web editor, which uses the system font now (`web/test_web.mjs` checks it); the licence text stays | SIL OFL 1.1 | `web/JETBRAINSMONO-LICENSE.txt` |
@@ -251,3 +253,11 @@ by those owners.
 
 A default build never enables the Bluetooth / Wi-Fi radio of the hardware. The builder item `BLE` (off by default) builds Optimist's own Bluetooth LE MIDI stack, which starts the radio with values captured from
 M-VAVE's stock V15 firmware (Apache-2.0, the third-party table above). Wi-Fi is never enabled.
+
+## PLAYA (JTS22)
+
+PLAYA, the performance build of this repository (builder item `PERF`, profile `config/profiles/performance-v1.config`),
+was created by JFS with help from Claude (Anthropic) in November 2026, on Optimist at upstream commit `e6d9f5d`. Its new
+files carry an SPDX GPL-3.0-only header and say so; the Optimist files it changes are marked where they were changed
+(`FELUCCA_PERF`, "JTS22"). It is distributed under Optimist's licence, GPL-3.0-only. The parts it ports are listed in
+the table above (Golana's font tools and renderer, the Inter Tight font).

@@ -760,6 +760,25 @@ static void modal_frame(uint16_t fr)                    /* the modal's box over 
     cv_rect(8, 1, 224, MODAL_H - 2, fr);
     cv_rect(11, 4, 218, MODAL_H - 8, OP_SURF);
 }
+#if FELUCCA_PERF
+static void pf_modal_paint(void)                        /* JTS22: the question as a card, its answers as pills */
+{
+    char v[sizeof ui.arm_verb], a[sizeof ui.arm_arg], q[sizeof ui.arm_q];
+    modal_words(v, a, q);
+    cv_rect(0, 0, 240, MODAL_H, PF_BG);
+    aa_box(4, 2, 232, MODAL_H - 4, 16, ui.arm_danger ? PF_SEL : PF_PILL, PF_BG);
+    if (aa_w(&AF_PM, q) <= 216)
+        AA_MID(4, 6, 232, MODAL_H - 50, PM, q, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
+    else {
+        AA_MID(4, 6, 232, (MODAL_H - 50) / 2, PM, v, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
+        AA_MID(4, 6 + (MODAL_H - 50) / 2, 232, (MODAL_H - 50) / 2, PS, a, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
+    }
+    aa_box(14, MODAL_H - 42, 100, 30, 15, PF_TAG, ui.arm_danger ? PF_SEL : PF_PILL);
+    AA_MID(14, MODAL_H - 42, 100, 30, PS, "HOME: NO", PF_BG, PF_TAG);
+    aa_box(126, MODAL_H - 42, 100, 30, 15, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
+    AA_MID(126, MODAL_H - 42, 100, 30, PS, "SAVE: YES", PF_PILL, PF_BG);
+}
+#endif
 static void modal_paint(void)                           /* (once a pass: draw_modal) */
 {
     char v[sizeof ui.arm_verb], a[sizeof ui.arm_arg], q[sizeof ui.arm_q];
@@ -785,7 +804,16 @@ static void modal_paint(void)                           /* (once a pass: draw_mo
     cv_texts(24, MODAL_H - 21, "Home no", C_GRAY);   /* (as the panel: HOME left of SAVE; over the box's foot) */
     cv_texts(216 - text_ws("Save yes"), MODAL_H - 21, "Save yes", C_WHITE);
 }
-static void draw_modal(void) { cv_whole(OP_PY, MODAL_H, C_BLACK, modal_paint); }
+static void draw_modal(void)
+{
+#if FELUCCA_PERF
+    if (PF_FULL) {
+        cv_whole(60, MODAL_H, PF_BG, pf_modal_paint);
+        return;
+    }
+#endif
+    cv_whole(OP_PY, MODAL_H, C_BLACK, modal_paint);
+}
 static struct {
     char m[sizeof ui.msg];
     int32_t w;
@@ -797,10 +825,26 @@ static void toast_paint(void)
     cv_rect(2, 2, tst.w - 4, 32, OP_SURF);
     cv_texts(12, 10, tst.m, C_WHITE);
 }
+#if FELUCCA_PERF
+static void pf_toast_paint(void)                        /* JTS22: the message as a pill in the selection's colour */
+{
+    aa_box(0, 0, tst.w, 40, 20, PF_SEL, PF_BG);
+    AA_MID(0, 0, tst.w, 40, PM, tst.m, PF_BG, PF_SEL);
+}
+#endif
 static void draw_toast(void)                             /* the result of a confirmed action: small, in the middle */
 {
     char *m = tst.m;
     int32_t w;
+#if FELUCCA_PERF
+    if (PF_FULL) {
+        str_cpy(m, ui.msg, sizeof tst.m);
+        w = aa_w(&AF_PM, m) + 32;
+        tst.w = w > 236 ? 236 : w;
+        cv_whole_w((uint32_t)(120 - tst.w / 2), 100u, (uint32_t)tst.w, 40, PF_BG, pf_toast_paint);
+        return;
+    }
+#endif
     if (ui.toast_col)                                   /* a preset, a kit, a lane's sound: its name as stored */
         str_cpy(m, ui.msg, sizeof tst.m);
     else

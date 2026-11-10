@@ -68,6 +68,7 @@ src/ui/knob_accel.h:knob_accel:a | only when a > 1
 src/ui/splash.c:lg_seg:len | a stroke's length (Q4) from LG_SEGS, a const table whose strokes all have two different ends: at least 16
 src/display/lcd.c:lcd_fill_rows:w | returns when w is 0
 src/io/midi/midi_control.c:midi_expr:(c->bend<0?8192:8191) | 8192 or 8191
+src/io/midi/perf.c:perf_gain:den | 2 * perf.width, reached only when perf.width != 0 (the line before returns for width 0: HARD)
 src/core/params.c:param_format:(uint32_t)(d->max-d->min+1) | descriptors (const) have max >= min, so >= 1
 src/core/params.c:param_format:d->max | guarded: "d->max > 0 ?"
 src/storage/project.c:proj_apply:ENGINES[e]->npresets | guarded: "ENGINES[e]->npresets ? ... : 0"
@@ -281,6 +282,7 @@ src/seq/lane_fx.c:lfx_sound:(2u*(uint32_t)x+1u) | >= 1 (x a VRAND 1..64; the div
 src/seq/lane_fx.c:lfx_sound:(int32_t)(n-1u) | guarded: "r && n > 1u"
 src/seq/lane_fx.c:lfx_time:lfx_hits(s,l) | lfx_hits >= 1 + dstep_rat >= 1 (LFX_HITS >= 1 too)
 src/ui/optimist/op_preset.c:pop_paint:(int32_t)pop.total | pop_paint runs only from draw_pop's cv_tall, after "if (!pop.total || pop.cur >= pop.total) return"
+src/ui/optimist/op_preset.c:pf_pop_paint:(int32_t)pop.total | as pop_paint (it is called from it, PERF), and its loop runs only while pop.total is not 0
 src/ui/optimist/op_project.c:info_ram:total | a constant > 0: ARN_BYTES + ARN_UNDO_KEEP (16 KB) with an arena, INFO_SRAM without
 src/ui/optimist/op_project.c:info_ram_pct:total | a constant > 0: ARN_BYTES + ARN_UNDO_KEEP (16 KB) with an arena, INFO_SRAM without
 src/ui/optimist/op_project.c:sys_batt_pct:(uint32_t)(MV[i]-MV[i-1u]) | TABLE MV {3300, 3500, 3700, 3800, 3900, 4000, 4150}, strictly rising: each difference >= 100
@@ -372,3 +374,13 @@ src/ui/optimist/op_sdmon.c:smn_dry:n | the DRY line items: smn_items always puts
 src/storage/sd/sd_mon.c:ssm_streams:sst_k | SST_K, the builder's SD_RING x 2 (sd_stream.h: 2 .. 64, a static assert), never 0
 src/storage/sd/sd_stream.c:sst_run:sst_k | as ssm_streams
 src/storage/sd/sd_stream.h:sst_at_slow:sst_k | as ssm_streams
+src/ui/optimist/op_perf.c:pf_bank:PG_BN[pf_page] | after "if (!PG_BN[pf_page] || ...) return 0" (JTS22 PERF)
+src/ui/optimist/op_perf.c:pf_page_tap:pfm_rows() | pfm_rows() is PFR_N, PROJ_SLOTS, a page's PG_BN (only where not 0) or 1 (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_card:span | span = gmax - gmin, only inside "if (c->gmax > c->gmin)" (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_graph_env:a | a = 6 + pf_norm(..) >= 6; scaled by 232 / k (k <= 236) it stays >= 5 (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_graph_env:d | as a: 6 + pf_norm(..), >= 5 after the scaling (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_graph_env:k | k = a + d + hold + rl >= 54; divided by only when k > w (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_graph_env:rl | 6 + pf_norm(..) >= 6, after the scaling w - a - d - hold >= 5 (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_norm:(c->gmax-c->gmin) | only when c->gmax > c->gmin (the condition before it) (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_paint_mix:(c.gmax-c.gmin) | inside "else if (c.label && c.gmax > c.gmin)" (JTS22 PERF)
+src/ui/optimist/op_perfdraw.c:pf_paint_page:n | n = pfm_rows(): 1 at the least (see pf_page_tap) (JTS22 PERF)

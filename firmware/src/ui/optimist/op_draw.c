@@ -68,6 +68,9 @@ static uint32_t hs(uint32_t h, const char *s)          /* a signature: FNV-1a ov
         h = (h ^ (uint8_t)*s++) * 16777619u;
     return h * 16777619u;
 }
+#ifndef PF_FULL
+#define PF_FULL 0                                       /* (JTS22 PERFORM's whole panel: op_perf.c) */
+#endif
 static uint32_t hu(uint32_t h, uint32_t v) { return (h ^ v) * 16777619u; }
 static uint32_t hbytes(uint32_t h, const void *p, uint32_t n)   /* ... over n bytes */
 {
@@ -199,7 +202,11 @@ static void head_clock_draw(int32_t x, uint32_t k, uint32_t st)   /* x: the left
 static const uint8_t HEAD_TRK_SCR[SCR_N] = {
     [SCR_HOME] = 0, [SCR_SOUND] = 1, [SCR_FX] = 0, [SCR_PROJECT] = 0, [SCR_SYSTEM] = 0,
     [SCR_STEP] = 1, [SCR_SONG] = 0,  [SCR_TEMPO] = 0, [SCR_SCOPE] = 0, [SCR_GLOBAL] = 0,
-    [SCR_LFX] = 1};
+    [SCR_LFX] = 1,
+#if FELUCCA_PERF
+    [SCR_PERF] = 1,
+#endif
+};
 /* the page's title into t (n bytes), as drawn (sentence case, the names table's: op_names.c): the cursor row's name alone,
  * the badge names the screen ("Ins tone", "Tools", "Scene A"); the mixer's track rows: the row's name and the set ("T1 mix").
  * The title is the row's name verbatim, its continuation number kept ("Edit 1 2/7": the audit's #2, style guide 1) */
@@ -1497,7 +1504,7 @@ static void op_frame_draw(void)
     {                                                   /* STEP's grid takes the panel from y 25 (no cards): the band again whole when
                                                          * that changes (a layer on STEP, the NAME screen) */
         static uint8_t was_full;
-        uint32_t full = (ui.scr == SCR_STEP || glo_cycle() || pl_on() || song_tbl_on()) && lay.shown == LY_PLAY && !page_owned();   /* (GLOBAL and
+        uint32_t full = (ui.scr == SCR_STEP || PF_FULL || glo_cycle() || pl_on() || song_tbl_on()) && lay.shown == LY_PLAY && !page_owned();   /* (GLOBAL and
                                                          * SYSTEM's list too: no cards, op_gldraw.c) */
         if (full != was_full && !ui.force) {
             lcd_fill(0, OH_HEAD, 240, 240 - OP_MTR - OH_HEAD, C_BLACK);   /* (the load lines' rows stay: op_meters.c) */
@@ -1513,7 +1520,8 @@ static void op_frame_draw(void)
     }
     nn_tick();                                          /* (the note played: before the help line, which shows it) */
     hl_pre(ov);                                         /* (the help line: its rows kept from the bands, op_help.c) */
-    draw_head();
+    if (!PF_FULL || lay.shown != LY_PLAY)
+        draw_head();                                    /* (JTS22 PERFORM: no header, the sketch from the top) */
     if (gap)                                            /* the rows between the header and the cards (OH_HEAD .. OY_CARD): no band's but
                                                          * PRESETS' popup list (POP_Y) and the full screens' draw there, so with the header
                                                          * drawn whole (a repaint, the list closed) they are black again. Before, the list's
@@ -1521,8 +1529,12 @@ static void op_frame_draw(void)
                                                          * (op_repaint) never sent them (2026-11-01: the client's rows 26..27 wrong) */
         lcd_fill(0, OH_HEAD, 240, (uint32_t)((ov == 5u ? OY_CARD - 2 : OY_CARD) - OH_HEAD), C_BLACK);   /* (under the popup
                                                          * list: to its box, op_preset.c POP_Y) */
+    if (gap && PF_FULL)
+        ui.sig[2] = 0;                                  /* (PERFORM: its panel again over those rows) */
     memline_draw();                                     /* (last on the header's rows 0-1: every page, the early returns below too) */
-    mtr_draw();                                         /* (the load lines on the last rows, every page: op_meters.c; ui.force still set here) */
+    if (!PF_FULL)
+        mtr_draw();                                     /* (the load lines on the last rows, every page: op_meters.c; ui.force still set here;
+                                                         * JTS22's pages: their boxes on those rows) */
     if (ml_on() && ov != 4u) {                          /* the load's memory list: the gauge, the rows, SAVE / HOME */
         ml_draw();
         ui.force = 0;
@@ -1542,7 +1554,7 @@ static void op_frame_draw(void)
         lay_draw_cards();                              /* a layer: its knobs' cards, its tiles (op_laydraw.c) */
     else if (pat_view())
         ui.sig[1] = 0;                                 /* (the patterns screen: its panel takes the cards' band; the cards drawn again when it closes) */
-    else if (ui.scr != SCR_STEP && !glo_cycle() && !pl_on() && !song_tbl_on()
+    else if (ui.scr != SCR_STEP && !PF_FULL && !glo_cycle() && !pl_on() && !song_tbl_on()
 #if FELUCCA_BT_UI
              && !dev_listing()                          /* (the BLE devices: no cards, the list the whole panel, the user 2026-10-19) */
 #endif
@@ -1560,6 +1572,14 @@ static void op_frame_draw(void)
             mx_draw();                                  /* the mixer's rows: op_mixdraw.c */
         else if (ui.scr == SCR_SCOPE)
             scope_draw();                               /* the oscilloscope: op_scope.c */
+#if FELUCCA_PERF
+        else if (ui.scr == SCR_PERF)
+            pfm_draw();                                  /* JTS22 PERFORM: the sketch (op_perfdraw.c) */
+#endif
+#if FELUCCA_PERF
+        else if (ui.scr == SCR_STEP)
+            pf_seq_draw();                              /* JTS22: the drums' steps (op_perfdraw.c) */
+#endif
         else if (ui.scr == SCR_STEP)
             step_frame();                               /* the grid / the roll, the cards over it: op_stepdraw.c */
         else if (song_tbl_on())

@@ -186,8 +186,12 @@ early t_ble_rf
 job; ( jobin
     $CC -w -Ifirmware/hal -o "$OUT/encoder_test" tests/encoder_test.c
     run "encoders: first click, direction and reversed transitions" "$OUT/encoder_test"
-    $CC -w -o "$OUT/half_peak_test" tests/half_peak_test.c
-    run "the release's master meter: each half's peak kept as a word (no 4 KB copy of the halves), equal to the copy's scan" "$OUT/half_peak_test"
+    if [ -f fm1base/optimist/core/opt_half_peak.h ]; then   # (the private fm1base submodule; JTS22 builds without it)
+        $CC -w -o "$OUT/half_peak_test" tests/half_peak_test.c
+        run "the release's master meter: each half's peak kept as a word (no 4 KB copy of the halves), equal to the copy's scan" "$OUT/half_peak_test"
+    else
+        echo "== skipped: half_peak_test (fm1base submodule not checked out)"
+    fi
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
     $CC -w -Ifirmware/hal -o "$OUT/encoder_fast_test" tests/encoder_fast_test.c
@@ -608,8 +612,12 @@ job; ( jobin
     run "MIDI clock: follow USB / TRS (SYNC AUTO, jitter, ramps, start / stop / continue / SPP), on-time steps" "$OUT/clock_sync_test"
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
-    $CC -O2 -w -o "$OUT/link_test" tests/link_test.c -lm
-    run "Ableton Link peer: wire format, Link's rounding, join the older session, tempo / start-stop both ways, phase, ttl" "$OUT/link_test"
+    if [ -f fm1base/link/link.c ]; then   # (the private fm1base submodule)
+        $CC -O2 -w -o "$OUT/link_test" tests/link_test.c -lm
+        run "Ableton Link peer: wire format, Link's rounding, join the older session, tempo / start-stop both ways, phase, ttl" "$OUT/link_test"
+    else
+        echo "== skipped: link_test (fm1base submodule not checked out)"
+    fi
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
     $CC -O2 -w -o "$OUT/wifi_sta_test" tests/wifi_sta_test.c
@@ -1297,6 +1305,8 @@ job; ( jobin
 job; ( jobin
     $CC -O2 -w -I"$HGEN" -Ifirmware/src $SEC4 -o "$OUT/midi_ch_test" tests/midi_ch_test.c -lm
     run "MIDI channels per track (SLOOP 2.4 phase 3): defaults, in, keys, OFF, the project round trip" "$OUT/midi_ch_test"
+    $CC -O2 -w -I"$HGEN" -Ifirmware/src $SEC4 -DFELUCCA_PERF=1 -DFELUCCA_MIDI_EXPR=1 -o "$OUT/perf_test" tests/perf_test.c -lm
+    run "PERF (JTS22): layers A / B, LAYER / HARD / BLEND gains, note ownership across split, transpose, pedal" "$OUT/perf_test"
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
     $CC -O2 -w -I"$HGEN" -Ifirmware/src $SEC4 -DFELUCCA_CDC=1 -o "$OUT/midi_seq_test" tests/midi_seq_test.c -lm
@@ -1996,8 +2006,8 @@ job; ( jobin
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
     run "optimist.py: the command line, toolchain backends, SDK lookup, emulator launcher" python3 tests/optimist_cli_test.py
-    run "the release build: fm1-base submodule, the builder's configuration into its build, sizes, flash identity" python3 tests/fm1base_test.py
-    run "the release's update loader: a MEMORY step switch clears what flash_layout.py's rule says, every pair" python3 tests/fm1base_steps_test.py
+    if [ -d fm1base/optimist ]; then run "the release build: fm1-base submodule, the builder's configuration into its build, sizes, flash identity" python3 tests/fm1base_test.py; else echo "== skipped: fm1base_test.py (fm1base submodule not checked out)"; fi
+    if [ -d fm1base/optimist ]; then run "the release's update loader: a MEMORY step switch clears what flash_layout.py's rule says, every pair" python3 tests/fm1base_steps_test.py; else echo "== skipped: fm1base_steps_test.py (fm1base submodule not checked out)"; fi
 ) >"$U.out" 2>&1 & jobbg
 job; ( jobin
     run "emu-check --jobs: the driver built once by the parent, the checks' processes never run cargo (integration57's race)" python3 tests/emu_driver_once_test.py

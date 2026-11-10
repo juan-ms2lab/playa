@@ -49,6 +49,9 @@ static uint32_t host_slots[3u * 0x14000u / 4u];
 #include "../firmware/src/engines/engines.c"
 #include "../firmware/src/drums/drums.c"
 #include "../firmware/src/core/params.c"
+#if FELUCCA_PERF
+#include "../firmware/src/io/midi/perf.c"
+#endif
 #include "../firmware/src/core/voice.c"
 #include "../firmware/src/fx/slicer/slicer.c"
 #if FELUCCA_MACROS

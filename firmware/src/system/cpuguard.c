@@ -624,7 +624,7 @@ static void cg_spike(uint32_t late)
             cg.vcn = 0;
         else if (++cg.vcn >= CG_VSTEP) {
             cg.vcn = 0;
-            cg.vcap = (uint8_t)(cg.vcap + 1u < NVOICE ? cg.vcap + 1u : 0u);
+            cg.vcap = (uint8_t)(cg.vcap + 1u < VBUDGET ? cg.vcap + 1u : 0u);
         }
     }
     if (cg.spk < CG_SPK_ON || !cg_react || cg.avg < CG_RFLOOR)

@@ -13,7 +13,7 @@
  *                      not saved (TB-3PO's defaults at power-on and NEW) */
 enum { BPS_RTYPE, BPS_GDENS, BPS_GACC, BPS_GSLD, BPS_GGO, BPS_CH0, BPS_CH1, BPS_CH2, BPS_CHD, BPS_MOUT, BPS_MIN,
        BPS_COUNT };
-static int16_t bp_set[BPS_COUNT] = {[BPS_GDENS] = 70, [BPS_GACC] = 40, [BPS_GSLD] = 25, [BPS_CH0] = 1, [BPS_CH1] = 2,
+static int16_t bp_set[BPS_COUNT] = {[BPS_GDENS] = 70, [BPS_GACC] = 40, [BPS_GSLD] = 25, [BPS_CH0] = 1, [BPS_CH1] = FELUCCA_PERF ? 1 : 2,
                                     [BPS_CH2] = 3};
 static const char *const N_BPGO[] = {"--", "GO"};
 static const char *const N_MCH[] = {"OFF", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
@@ -27,7 +27,7 @@ static const param_desc_t BPS_DESC[BPS_COUNT] = {
     [BPS_GSLD] = PD("SLD", F_INT, 0, 100, 25),
     [BPS_GGO] = PE("GEN", N_BPGO, 0),
     [BPS_CH0] = PE("TRK 1", N_MCH, 1),
-    [BPS_CH1] = PE("TRK 2", N_MCH, 2),
+    [BPS_CH1] = PE("TRK 2", N_MCH, FELUCCA_PERF ? 1 : 2),
     [BPS_CH2] = PE("TRK 3", N_MCH, 3),
     [BPS_CHD] = PE(FELUCCA_DRUMS ? "DRUMS" : "TRK 4", N_MCH, FELUCCA_DRUMS ? 10 : 4),
     [BPS_MOUT] = PE("OUT", N_MOUT, 0),

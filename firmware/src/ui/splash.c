@@ -135,9 +135,58 @@ static void optimist_logo(uint32_t x0, uint32_t y0)
     }
 }
 
+#if FELUCCA_PERF
+/* JTS22 PLAYA's boot screen (the user, 2026-11-10: "PLAYA, under it JTS22 powered by Optimist, a retro 80 pixel graphic
+ * of a beach umbrella in the beach"): an 80 x 80 picture, each pixel 3 x 3 (a sunset sky in bands, a striped sun, the
+ * sea, the sand, a striped umbrella, its shadow, a towel), the names over the sky in the performance face (perf_aa.c) */
+#define PL_RGB(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
+static uint16_t playa_px(int32_t x, int32_t y)
+{
+    static const uint16_t SKY[5] = {PL_RGB(27, 16, 53), PL_RGB(58, 28, 107), PL_RGB(122, 42, 140), PL_RGB(217, 70, 122),
+                                    PL_RGB(255, 122, 79)};
+    int32_t dx = x - 57, dy = y - 40, sx = x - 32, sy = y - 44;
+    if (y >= 24 && y <= 40 && dx * dx * 10 + dy * dy * 26 <= 18 * 18 * 10 && !(y == 40 && (x & 3) == 1)) {
+        int32_t w = (dx + 18) * 6 / 37;                    /* the canopy: six wedges, red and white */
+        return (w & 1) ? PL_RGB(255, 243, 224) : PL_RGB(230, 57, 70);
+    }
+    if ((x == 56 || x == 57) && y >= 25 && y <= 72)
+        return PL_RGB(107, 66, 38);                        /* the pole (no tip: the names above it) */
+    if (y < 45) {
+        if (sx * sx + sy * sy <= 16 * 16 && y >= 28 && !(y >= 34 && (y - 34) % 3 == (y > 40 ? 0 : 2)))
+            return y < 36 ? PL_RGB(255, 210, 63) : PL_RGB(255, 140, 66);   /* the sun, cut by the 80s' stripes */
+        return SKY[y < 12 ? 0 : y < 22 ? 1 : y < 31 ? 2 : y < 38 ? 3 : 4];
+    }
+    if (y < 55)                                            /* the sea, its glints */
+        return ((y == 47 && (x % 9) < 3) || (y == 50 && ((x + 4) % 11) < 4) || (y == 53 && ((x + 7) % 13) < 5))
+               ? PL_RGB(79, 163, 199) : PL_RGB(27, 58, 107);
+    if ((x - 50) * (x - 50) + (y - 73) * (y - 73) * 9 <= 14 * 14)
+        return PL_RGB(217, 167, 102);                      /* the shadow */
+    if (x >= 14 && x <= 32 && y >= 63 && y <= 70)
+        return ((x - 14) / 3) & 1 ? PL_RGB(255, 243, 224) : PL_RGB(18, 64, 176);   /* the towel */
+    return (x * 7 + y * 3) % 11 == 0 ? PL_RGB(217, 167, 102) : PL_RGB(242, 201, 138);   /* the sand */
+}
+static void playa_paint(void)
+{
+    int32_t y, x;
+    for (y = 0; y < 240; y++) {
+        if (y + cv_oy < 0 || y + cv_oy >= (int32_t)cv_h)
+            continue;
+        for (x = 0; x < 80; x++)
+            cv_rect(x * 3, y, 3, 1, playa_px(x, y / 3));
+    }
+    aa_text(120 - aa_w(&AF_PL, "PLAYA") / 2 + 2, 6, &AF_PL, "PLAYA", PL_RGB(27, 16, 53), PL_RGB(27, 16, 53));
+    aa_text(120 - aa_w(&AF_PL, "PLAYA") / 2, 4, &AF_PL, "PLAYA", C_WHITE, PL_RGB(27, 16, 53));
+    aa_text(120 - aa_w(&AF_PS, "JTS22 powered by Optimist") / 2, 58, &AF_PS, "JTS22 powered by Optimist",
+            PL_RGB(255, 210, 63), PL_RGB(58, 28, 107));
+}
+#endif
 /* the boot screen: the logo, the name in the theme's colour, the version from the build (VERSION) */
 static void boot_splash(void)
 {
+#if FELUCCA_PERF
+    cv_tall(0, 240, C_BLACK, playa_paint);
+    return;
+#endif
     const char *v = FELUCCA_VERSION, *p = "OPTIMIST ";
     uint32_t i = 0, r0, n;
     while (p[i] && v[i] == p[i])

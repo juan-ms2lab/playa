@@ -46,10 +46,10 @@ typedef struct {
 static cg_t cg;
 static uint8_t cg_react = 1;     /* the reactive path on (tests/overload_stress.c turns it off to compare) */
 #define CG_LEVEL ((uint32_t)cg.level)
-#define CG_VBUDGET ((uint32_t)(cg.vcap ? cg.vcap : NVOICE))   /* the voices the parts share now (voice.c voice_room) */
+#define CG_VBUDGET ((uint32_t)(cg.vcap ? cg.vcap : VBUDGET))   /* the voices the parts share now (voice.c voice_room) */
 #else
 #define CG_LEVEL 0u
-#define CG_VBUDGET NVOICE
+#define CG_VBUDGET VBUDGET
 #endif
 /* the render's limits: the swarm's copies and the UNISON voices (2 from their levels on); a synthesised drum voice
  * ends under CG_DTAIL (Q15: 8, -72 dBFS; from quality on 327, -40 dBFS; drum_synth.c ds_alive) */

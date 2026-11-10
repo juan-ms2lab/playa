@@ -623,6 +623,10 @@ static uint32_t voice_victim(const track_t *self, int soft, track_t **pp)
                 c = 1;                                  /* released */
             else if (mode == V_UNISON && i > 0 && i < nu)
                 c = 2;                                  /* an extra UNISON voice */
+#if FELUCCA_PERF
+            else if (p == 2u && self != t)
+                c = 2;                                  /* PERF: the song's part gives way to the live layers */
+#endif
             else if (!soft && mode == V_POLY && i != low)
                 c = 3;                                  /* held, not the bass */
             else
@@ -775,6 +779,9 @@ static FAST(seq) void voice_start(track_t *t, voice_t *v, uint32_t note, uint32_
     uint32_t keep = e->keep;
     v->note = (uint8_t)note;
     v->vel = (uint8_t)vel;
+#if FELUCCA_PERF
+    v->xg = perf_xg;                                    /* the press's crossfade gain (io/midi/perf.c), velocity kept */
+#endif
     v->gate = 1;
     v->active = 1;
     v->stage = 1;
@@ -1614,6 +1621,9 @@ static HOT uint32_t track_render(track_t *t, int32_t *out, uint32_t n)
                 m.amp1 = mulq15(m.amp1, lm.g2);
             if (fade)                                   /* linear to 0 over the fade */
                 m.amp1 = m.amp1 * (int32_t)(t->xf - 1u) / (int32_t)XF_BLOCKS;
+#if FELUCCA_PERF
+            m.amp1 = (int32_t)(((int64_t)m.amp1 * v->xg) >> 15);   /* the split's gain, ramped as amp0 -> amp1 */
+#endif
             m.amp0 = v->env_out;
             v->env_out = m.amp1;
         }

@@ -82,7 +82,13 @@
 #endif
 #endif
 #include "op_project.c"
+#if FELUCCA_PERF
+#include "op_perf.c"                /* JTS22 PERFORM: the screen (before the screens' table) */
+#endif
 #include "op_global.c"
+#if FELUCCA_PERF
+#include "perf_aa.c"                 /* JTS22: the bold anti-aliased text and pills (Golana's), the themes */
+#endif
 #include "op_graph.c"
 #include "op_preset.c"
 #include "op_name.c"
@@ -95,6 +101,9 @@
 #include "op_meters.c"            /* the load lines on the screen's last rows (SYSTEM > METERS, core/meters.h) */
 #include "op_mixdraw.c"
 #include "op_scope.c"
+#if FELUCCA_PERF
+#include "op_perfdraw.c"            /* JTS22 PERFORM: its panel */
+#endif
 #include "op_stepdraw.c"
 #include "op_laydraw.c"
 #include "op_songtbl.c"            /* SONG: the scenes table and the parts timeline (the user, 2026-10-21) */

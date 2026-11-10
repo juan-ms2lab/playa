@@ -57,6 +57,9 @@ static uint8_t live_save_off;            /* an erase held the audio (no suspend)
 #include "engines/engines.c"
 #include "drums/drums.c"
 #include "core/params.c"
+#if FELUCCA_PERF
+#include "io/midi/perf.c"             /* JTS22 layers and split: before voice.c (perf_xg) */
+#endif
 #include "core/voice.c"
 #include "fx/slicer/slicer.c"          /* per-track SLICER insert, used by fx.c */
 #if FELUCCA_MACROS

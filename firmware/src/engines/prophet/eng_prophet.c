@@ -18,7 +18,7 @@
 #if !defined(__PI32V2__)
 #include "p5_dsp.c"                                   /* (the host tests: one unit; the target builds it alone, with the FPU) */
 #endif
-#define P5_POLY 5u
+#define P5_POLY (FELUCCA_PERF ? 8u : 5u)                 /* (PERF: 8, as Melodee's two-core PROPHET; the CPU guard sheds) */
 #define P5_NOCUT INT32_MIN
 static const char *const N_P5_A[] = {"SAW", "PULSE", "BOTH", "SAW.S", "PULS.S", "BOTH.S"};
 static const char *const N_P5_B[] = {"SAW", "TRI", "PULSE", "S+T", "S+P", "T+P", "ALL"};

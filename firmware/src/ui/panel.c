@@ -75,6 +75,9 @@ static int32_t panel_enc(uint32_t role)
     if ((enc_hold >> role) & 1u)
         return 0;
     s = fm1_enc_take(panel.enc[role]) * panel.dir[role];
+#if FELUCCA_PERF
+    s += perf_enc_take(role);                      /* a MIDI controller's knob (io/midi/perf.c) */
+#endif
     if (s)
         ui_input_ms = fm1_ms;                      /* a knob turning is not idle either: autosave waits */
     return s;

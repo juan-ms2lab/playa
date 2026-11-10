@@ -74,11 +74,22 @@ static int midi_find(uint32_t ch, uint32_t note)
     return -1;
 }
 
+#if FELUCCA_PERF
+/* PERF: parts 1 and 2 share channel ch: it plays both, through the split (perf.c) */
+static int midi_layered(uint32_t ch)
+{
+    return trk_midi_ch(0) == ch && trk_midi_ch(1) == ch;
+}
+#endif
+
 /* the tracks a channel's controllers reach: the one it plays, and those holding its notes */
 static uint32_t midi_targets(uint32_t ch)
 {
     int pt = midi_track_idx(ch);
     uint32_t m = pt < 0 ? 0u : 1u << (uint32_t)pt, i;       /* (no track on the channel: only the tracks holding its notes) */
+#if FELUCCA_PERF
+    m |= midi_layered(ch) ? 3u : 0u;                         /* both layers: pedal, bend, wheel, panics */
+#endif
     for (i = 0; i < midi_nheld; i++)
         if ((midi_held[i].ch & 15u) == ch)
             m |= 1u << midi_held[i].trk;
@@ -114,17 +125,11 @@ static void midi_release_at(uint32_t i)
         input_off(&trk[h.trk % NTRK], h.nt[k]);
 }
 
-static void midi_note_on(uint32_t ch, uint32_t note, uint32_t vel)
+static void midi_press(uint32_t ch, uint32_t note, uint32_t vel, uint32_t ti)
 {
-    int ti = midi_track_idx(ch);
-    track_t *t = &trk[ti < 0 ? 0u : (uint32_t)ti];
+    track_t *t = &trk[ti];
     midi_held_t *h;
     uint32_t k, mapped;
-    int i = midi_find(ch, note);
-    if (i >= 0)
-        midi_release_at((uint32_t)i);             /* a repeated note replaces its press (pedal-held too) */
-    if (ti < 0)
-        return;                                   /* its track's channel is OFF, and no other track has it */
     if (is_drum(t)) {
         input_on(t, note, vel);                   /* a one-shot: nothing to release */
         return;
@@ -149,15 +154,38 @@ static void midi_note_on(uint32_t ch, uint32_t note, uint32_t vel)
         input_on(t, h->nt[k], vel);
 }
 
+static void midi_note_on(uint32_t ch, uint32_t note, uint32_t vel)
+{
+    int ti = midi_track_idx(ch), i;
+    while ((i = midi_find(ch, note)) >= 0)
+        midi_release_at((uint32_t)i);             /* a repeated note replaces its presses (pedal-held too; both layers) */
+    if (ti < 0)
+        return;                                   /* its track's channel is OFF, and no other track has it */
+#if FELUCCA_PERF
+    if (midi_layered(ch)) {                       /* one press per layer that plays the note, each with its gain */
+        uint32_t l, g;
+        for (l = 0; l < 2u; l++)
+            if ((g = perf_gain(l, note)) != 0u) {
+                perf_xg = (uint16_t)g;
+                midi_press(ch, note, vel, l);
+            }
+        perf_xg = 32768u;
+        return;
+    }
+#endif
+    midi_press(ch, note, vel, (uint32_t)ti);
+}
+
 static void midi_note_off(uint32_t ch, uint32_t note)
 {
-    int i = midi_find(ch, note);
-    if (i < 0)
-        return;
-    if (midi_chan(ch)->pedal)
-        midi_held[i].ch |= MH_PEDAL;              /* the pedal holds it */
-    else
-        midi_release_at((uint32_t)i);
+    uint32_t i = 0, pedal = midi_chan(ch)->pedal;
+    while (i < midi_nheld)                        /* every press of the note (a layered note: one per layer) */
+        if (midi_held[i].ch != ch || midi_held[i].src != note)
+            i++;                                  /* (MH_PEDAL set: already ended, the pedal holds it) */
+        else if (pedal)
+            midi_held[i++].ch |= MH_PEDAL;        /* the pedal holds it */
+        else
+            midi_release_at(i);
 }
 
 static void midi_pedal_up(uint32_t ch)
@@ -224,6 +252,10 @@ static void midi_control(uint32_t ch, uint32_t cc, uint32_t v)
 {
     midi_chan_t *c = midi_chan(ch);
     uint32_t i, mask;
+#if FELUCCA_PERF
+    if (perf_cc(cc, v))
+        return;                                    /* a controller's knob as a panel encoder (perf.c) */
+#endif
     switch (cc) {
     case 1:  c->wheel = (uint8_t)v;  break;
     case 2:  c->breath = (uint8_t)v; break;

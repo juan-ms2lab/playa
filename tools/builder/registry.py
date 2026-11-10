@@ -1012,6 +1012,10 @@ _add("MIDI_CLOCK", "FELUCCA_MIDI_CLOCK", "MIDI clock in + out", M, 49,
 _add("MIDI_EXPR", "FELUCCA_MIDI_EXPR", "MIDI expression (bend, mod, sustain, RPN)", M, 50, provenance=MELODEE_MIDI,
      desc="Plays more than notes from MIDI: pitch bend, mod wheel, breath, foot, aftertouch, sustain pedal and "
           "pitch-bend range (RPN 0). About 0.5 KB of flash; off: only notes and the panic messages work.")
+_add("PERF", "FELUCCA_PERF", "Performance: layers A / B on one channel with a keyboard split", M, 455,
+     desc="JTS22 PLAYA performance mode: tracks 1 and 2 become layers A and B on MIDI channel 1 (the drums on 10), "
+          "played together (LAYER), split at a note (SPLIT), crossfaded around it (BLEND, equal power, the velocity "
+          "kept) or A alone (SINGLE); the PLAYA screens, one page a button. Each layer keeps its own engine, sound and effects.")
 _add("MIDI_NOTEOUT", "FELUCCA_MIDI_OUT", "MIDI note out of the sequencer (GLOBAL MIDI OUT = BOTH or SEQ)", M, 199,
      provenance=SLOOP_24,
      desc="MIDI OUT = BOTH (SLOOP 2.4's SEQ: the keys and the sequencer) or SEQ (the sequencer alone, no keys): what the "

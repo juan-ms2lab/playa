@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include "backports.h"       /* the backported features' build switches (FELUCCA_CHANCE ...) */
 #define NVOICE 8                 /* voices per part, and the budget shared by all parts */
+/* PERF: the parts share more than one part's voices (two layers at once): 12 of the 24; the CPU guard still caps it
+ * under load (cpuguard.h vcap). A constant for now; a GLO setting once the hardware's headroom is measured */
+#define VBUDGET (FELUCCA_PERF ? 12u : (uint32_t)NVOICE)
 #define NPOLY 8
 /* FELUCCA_DRUMS 0 (the builder's DRUMS, 2026-10-26): no drum track and no drum code; track 4 is a fourth synth part */
 #ifndef FELUCCA_DRUMS
@@ -654,6 +657,7 @@ typedef struct {
     uint8_t pitch_frac;          /* the glide between 1/16 semitones: pitch_cur + pitch_frac / 256 */
     uint8_t ofs;                 /* a new voice: the sample of its first block it starts at (core.h ev_at) */
     int16_t penv;                /* the pitch envelope (ENV > PIT): Q15, a fast fall from the note's start */
+    uint16_t xg;                 /* PERF: the split's crossfade gain, Q15 (32768 = unity; io/midi/perf.c) */
     int32_t env;                 /* Q24 */
     int32_t env2;                /* ENV2 (voice.c env2_tick): Q24, | E2_ATK while it rises */
     int32_t env_out;             /* last control-rate amplitude, Q15 */

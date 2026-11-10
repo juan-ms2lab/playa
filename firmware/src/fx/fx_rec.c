@@ -21,6 +21,9 @@
 #define FXR_GEN_N 0u
 #endif
 #define FXR_HEAD (2u + FX_NSLOT)
+#ifndef PERF_TLV_ROOM
+#define PERF_TLV_ROOM 7u                                   /* io/midi/perf.c PERF_TLV: 2 + 5, room kept in every build */
+#endif
 #define FXR_MAX (461u + FXR_GEN_N)                     /* the stored form at its longest (FXR_HEAD + the TLVs; 120 -> 156
                                                         * 2026-10-13: + the further inserts' TLVs, 6 x (2 + 4), fx_slots.c
                                                         * fxs_tlv, in every build: a record from any build reads whole;
@@ -137,7 +140,7 @@ static void fxz_untlv(const uint8_t *a, uint32_t n)    /* (n 0: none, every line
 #define FXRET_TLV 0x41u
 #define FXRET_N 3u
 #define FXRET_TLV_N (FXRET_N + 1u)
-_Static_assert(FXR_HEAD + 2u * (FXT_N - 1u) + FXT_TLV_SUM + 2u + DLM_TLV_N + 2u + FXRET_TLV_N + 2u + INS_TLV_N + 2u + SMUTE_TLV_ACC + 2u + MST_TLV_N + 2u + LIN_TLV_N + 2u + NPART + 2u + UT_TLV_N + 2u + RT_TLV_N + 2u + RS_NMAX + 2u + DLYF_N + 2u + RP_TLV_N + FXR_GEN_N + 2u + FXZ_N <= FXR_MAX, "the FX record: every TLV fits");
+_Static_assert(FXR_HEAD + 2u * (FXT_N - 1u) + FXT_TLV_SUM + 2u + DLM_TLV_N + 2u + FXRET_TLV_N + 2u + INS_TLV_N + 2u + SMUTE_TLV_ACC + 2u + MST_TLV_N + 2u + LIN_TLV_N + 2u + NPART + 2u + UT_TLV_N + 2u + RT_TLV_N + 2u + RS_NMAX + 2u + DLYF_N + 2u + RP_TLV_N + FXR_GEN_N + 2u + FXZ_N + PERF_TLV_ROOM <= FXR_MAX, "the FX record: every TLV fits");
 _Static_assert(UT_TLV > VCNT_TLV && RET_TLV > UT_TLV + 1u && RPP_TLV == RET_TLV + 2u && RSND_TLV == RET_TLV + 3u, "the USB input's TLV, the returns': ids no other takes (0x49: EQ3's)");
 #if GEN_ON
 _Static_assert(GEN_TLV == RET_TLV + 1u && GEN_TLV_MAX <= 255u, "the note generators' TLV (seq/gen.c): 0x4B, past fx-pool's 0x49 0x4A");
@@ -468,6 +471,9 @@ static uint32_t fxr_encode(uint8_t *o)
     n = fxr_tlv(o, n, DLYF_TLV, dlyf_tlv(o + n + 2u));  /* the delay filter (above) */
     n = fxr_tlv(o, n, FXZ_TLV, fxz_tlv(o + n + 2u));   /* FX MEMORY (above) */
     n = fxr_tlv(o, n, RET_TLV, rt_tlv(o + n + 2u));    /* the returns holding another type (fx_slots.c rt_tlv) */
+#if FELUCCA_PERF
+    n = fxr_tlv(o, n, PERF_TLV, perf_tlv(o + n + 2u)); /* the layers' split (io/midi/perf.c) */
+#endif
     n = fxr_tlv(o, n, RSND_TLV, rs_tlv(o + n + 2u));   /* the sends between the returns (fx_slots.c rs_tlv) */
     n = fxr_tlv(o, n, RPP_TLV, rp_tlv(o + n + 2u));    /* the returns' PRE and POST inserts (fx_slots.c rp_tlv) */
     (void)mst_map(mm);                                 /* the master's slots (above), as the tracks' */
@@ -533,6 +539,9 @@ static int fxr_decode(const uint8_t *a, uint32_t n, int all)
         fxz_untlv(0, 0);                               /* (none: FX MEMORY FULL, the build's sizes) */
         rs_untlv(0, 0);                                /* (none: no send between the returns) */
         vcnt_untlv(0, 0);                              /* (none: every part's VOICES at the engine's max) */
+#if FELUCCA_PERF
+        perf_untlv(0, 0);                              /* (none: the default split, perf.c) */
+#endif
 #if FELUCCA_USB_AUDIO
         ut_untlv(0, 0);                                /* (none: the USB input at its defaults) */
 #endif
@@ -550,6 +559,12 @@ static int fxr_decode(const uint8_t *a, uint32_t n, int all)
             if (all)
                 vcnt_untlv(a + at + 2u, a[at + 1u]);
         }
+#if FELUCCA_PERF
+        else if (a[at] == PERF_TLV) {
+            if (all)
+                perf_untlv(a + at + 2u, a[at + 1u]);
+        }
+#endif
 #if FELUCCA_USB_AUDIO
         else if (a[at] == UT_TLV) {
             if (all)
