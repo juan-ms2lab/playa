@@ -456,6 +456,10 @@ SIM_EXPORT(sim_flash_rev) uint32_t sim_flash_rev_get(void) { return sim_flash_re
 
 /* fm1_cstart's part that is not the chip's (main.c), then the start-up (fm1_main: up to its loop), then the host configures
  * the USB device (as a SET_CONFIGURATION: usb.c ep1_config) */
+#if FELUCCA_PERF
+/* JTS22: the boot screen drawn again on demand (the boot passes it at once here): its look checked in the simulator */
+SIM_EXPORT(sim_splash) void sim_splash(void) { boot_splash(); }
+#endif
 SIM_EXPORT(sim_boot) void sim_boot(void)
 {
     if (sim_booted || sim_status_v)

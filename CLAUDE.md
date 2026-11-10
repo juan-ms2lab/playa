@@ -41,8 +41,14 @@ python3 tools/optimist.py flash --classic --port <port name> --yes firmwares/<fi
 | Drawing (PERFORM, MIX, pages, ENV/LFO graphs, SAVE, SEQ) | `ui/optimist/op_perfdraw.c` |
 | Text / pill renderer, fonts, themes | `ui/optimist/perf_aa.c`, `perf_font.h` (generated), PF_THEMES |
 | Popups in the new style | `op_preset.c` pf_pop_paint, `op_graph.c` pf_modal_paint / pf_toast_paint |
-| Boot screen | `ui/splash.c` playa_paint |
+| Boot screen (80 x 80 pixel art, the sticker title) | `ui/splash.c` playa_paint / playa_title; the simulator draws it with `sim_splash()` |
 | Profile | `config/profiles/performance-v1.config` |
+
+## Releases
+- GitHub: `juan-ms2lab/playa`, branch `playa` (push: `git push playa performance-v1:playa`). Release `playa-v0.1` carries
+  `playa-0.1.fwsc`; replace it with `gh release upload playa-v0.1 <file> --clobber` and update the SHA-256 in its notes.
+- `tools/flash.py` and `tools/fm1_route.py` know `FM-1_780` as an Optimist-family build.
+- Off SEQ the keys only play (`perf_play_keys`, perf.c): the drum track's white keys play lanes, nothing is picked, keys dark.
 
 ## Testing with a controller
 An Akai MPK mini 3 on the Mac reaches the FM-1 through a small mido bridge (MPK in → FM-1 out, everything passed

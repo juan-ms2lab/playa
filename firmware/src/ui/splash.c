@@ -144,12 +144,12 @@ static uint16_t playa_px(int32_t x, int32_t y)
 {
     static const uint16_t SKY[5] = {PL_RGB(27, 16, 53), PL_RGB(58, 28, 107), PL_RGB(122, 42, 140), PL_RGB(217, 70, 122),
                                     PL_RGB(255, 122, 79)};
-    int32_t dx = x - 57, dy = y - 40, sx = x - 32, sy = y - 44;
-    if (y >= 24 && y <= 40 && dx * dx * 10 + dy * dy * 26 <= 18 * 18 * 10 && !(y == 40 && (x & 3) == 1)) {
+    int32_t dx = x - 57, dy = y - 45, sx = x - 32, sy = y - 44;   /* (the umbrella under the names: its pole once crossed "Optimist") */
+    if (y >= 29 && y <= 45 && dx * dx * 10 + dy * dy * 26 <= 18 * 18 * 10 && !(y == 45 && (x & 3) == 1)) {
         int32_t w = (dx + 18) * 6 / 37;                    /* the canopy: six wedges, red and white */
         return (w & 1) ? PL_RGB(255, 243, 224) : PL_RGB(230, 57, 70);
     }
-    if ((x == 56 || x == 57) && y >= 25 && y <= 72)
+    if ((x == 56 || x == 57) && y >= 30 && y <= 72)
         return PL_RGB(107, 66, 38);                        /* the pole (no tip: the names above it) */
     if (y < 45) {
         if (sx * sx + sy * sy <= 16 * 16 && y >= 28 && !(y >= 34 && (y - 34) % 3 == (y > 40 ? 0 : 2)))
@@ -165,6 +165,42 @@ static uint16_t playa_px(int32_t x, int32_t y)
         return ((x - 14) / 3) & 1 ? PL_RGB(255, 243, 224) : PL_RGB(18, 64, 176);   /* the towel */
     return (x * 7 + y * 3) % 11 == 0 ? PL_RGB(217, 167, 102) : PL_RGB(242, 201, 138);   /* the sand */
 }
+/* PLAYA as a national park sticker's title (the user, 2026-11-10): the letters on an arch, cream, a thick dusk outline,
+ * a sunset shadow under it, spaced out */
+static void playa_glyph(int32_t x, int32_t y, char c, uint16_t col, uint16_t bg, int32_t r)
+{
+    char s[2] = {c, 0};
+    int32_t dx, dy;
+    for (dy = -r; dy <= r; dy++)                       /* (r 0: the letter; else a ring of copies, the outline) */
+        for (dx = -r; dx <= r; dx++)
+            if (dx * dx + dy * dy <= r * r + r)
+                aa_text(x + dx, y + dy, &AF_PL, s, col, bg);
+}
+static void playa_title(void)
+{
+    static const char T[] = "PLAYA";
+    const uint16_t SKY0 = PL_RGB(27, 16, 53), INK = PL_RGB(27, 16, 53), SUN = PL_RGB(255, 122, 79), CREAM = PL_RGB(255, 243, 224);
+    int32_t w = 0, x, i, pass;
+    char s[2] = {0, 0};
+    for (i = 0; T[i]; i++)
+        s[0] = T[i], w += aa_w(&AF_PL, s) + 6;          /* (spaced out: a sticker's lettering) */
+    w -= 6;
+    for (pass = 0; pass < 3; pass++)                    /* the shadow, the outline, the letters */
+        for (i = 0, x = 120 - w / 2; T[i]; i++) {
+            int32_t cw, mid, y;
+            s[0] = T[i];
+            cw = aa_w(&AF_PL, s);
+            mid = x + cw / 2 - 120;
+            y = 2 + mid * mid / 260;                    /* (the arch: the middle letter highest) */
+            if (pass == 0)
+                playa_glyph(x + 3, y + 4, T[i], SUN, SKY0, 3);
+            else if (pass == 1)
+                playa_glyph(x, y, T[i], INK, SKY0, 3);
+            else
+                playa_glyph(x, y, T[i], CREAM, INK, 0);
+            x += cw + 6;
+        }
+}
 static void playa_paint(void)
 {
     int32_t y, x;
@@ -174,10 +210,9 @@ static void playa_paint(void)
         for (x = 0; x < 80; x++)
             cv_rect(x * 3, y, 3, 1, playa_px(x, y / 3));
     }
-    aa_text(120 - aa_w(&AF_PL, "PLAYA") / 2 + 2, 6, &AF_PL, "PLAYA", PL_RGB(27, 16, 53), PL_RGB(27, 16, 53));
-    aa_text(120 - aa_w(&AF_PL, "PLAYA") / 2, 4, &AF_PL, "PLAYA", C_WHITE, PL_RGB(27, 16, 53));
-    aa_text(120 - aa_w(&AF_PS, "JTS22 powered by Optimist") / 2, 58, &AF_PS, "JTS22 powered by Optimist",
-            PL_RGB(255, 210, 63), PL_RGB(58, 28, 107));
+    playa_title();
+    aa_text(120 - aa_w(&AF_PS, "JTS22 powered by Optimist") / 2, 70, &AF_PS, "JTS22 powered by Optimist", C_WHITE,
+            PL_RGB(58, 28, 107));
 }
 #endif
 /* the boot screen: the logo, the name in the theme's colour, the version from the build (VERSION) */
