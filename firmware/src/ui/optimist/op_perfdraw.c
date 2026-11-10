@@ -52,7 +52,7 @@ static void pf_paint_perf(uint32_t r)
     static const char *const MODE[PERF_NMODE] = {"LAYER", "SPLIT", "BLEND", "SINGLE"};
     char a[14], b[14], d[14], nn[5];
     uint32_t k, m = perf.mode == PERF_BLEND && !perf.width ? PERF_HARD : perf.mode;
-    uint16_t mc = r == PFR_MODE ? PF_SEL : PF_PILL, nc = r == PFR_NOTE ? PF_SEL : m == PERF_LAYER || m == PERF_SINGLE ? PF_TAG : PF_PILL;
+    uint16_t mc = r == PFR_MODE ? PF_SEL : PF_PILL, nc = r == PFR_NOTE ? PF_SEL : PF_PILL;   /* (always bright: the user, 2026-11-10, "too dim") */
     snd_name(0, a), snd_name(1, b), snd_name(TRK_DRUM, d);
     /* the column (the user, 2026-11-10): A 2 .. 40, the mode and the note a band of 40, B 80 .. 118, 18 rows, the drums
      * 136 .. 170, 18 rows, the knobs' boxes 188 to the foot */
