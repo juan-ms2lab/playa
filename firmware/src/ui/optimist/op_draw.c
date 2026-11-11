@@ -1482,6 +1482,10 @@ static void mtr_draw(void);                             /* op_meters.c */
 static void op_frame_draw(void)
 {
     uint32_t ov = op_overlay(), gap;
+#if FELUCCA_PERF
+    if (pf_glo_frame())
+        return;                                         /* (GLO held: the PLAYA screen, then the credits: op_perfdraw.c) */
+#endif
     if ((ov == 4u) != (ui.overlay == 4u))
         ui.force = 1;                                   /* (a Bluetooth code comes or goes: over any screen, NAME too) */
     if (ui.force) {

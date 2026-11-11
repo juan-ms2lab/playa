@@ -40,6 +40,8 @@ new interface. Unofficial: not made, endorsed or supported by M-VAVE or by the O
 - **External controllers:** eight knobs drive knobs 1–4, SELECT, PRESETS, ALGORITHM and the selected track's level;
   their CC numbers are editable on GLOBAL (default CC 70–77, an Akai MPK mini 3's K1–K8). Sustain, pitch bend and mod
   wheel reach both layers.
+- **Bluetooth MIDI in both ways:** the FM-1 is a Bluetooth MIDI device, and it pairs with Bluetooth MIDI keyboards on
+  its BLUETOOTH page (OCT− and OCT+ together).
 - **Five colour themes:** BLUE (default), MONOCHROME, CREAM, PLAYA and ROLO.
 - **Save / load** whole performances (both layers, split, effects, drums, theme) in the flash's slots.
 

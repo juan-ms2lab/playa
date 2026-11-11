@@ -28,6 +28,8 @@ This page covers everything PLAYA changes; the sounds, engines and effects thems
 | **SEQ** | SEQ | the drum step sequencer |
 | **PLAY** | — | starts / stops the drum sequencer |
 | **OCT− / OCT+** | — | the keyboard octave; on SEQ the bar shown |
+| **OCT− + OCT+** together | BLUETOOTH | pair Bluetooth MIDI keyboards (again: back to PERFORM) |
+| **GLO held** | — | the PLAYA screen; let go: the credits for a second |
 | **REC** | — | nothing yet (the looper: v1.5) |
 
 On the ENV, LFO, EDIT and ARP pages the selected track is shown top right in its engine's colour; they do nothing on
@@ -90,6 +92,14 @@ SAVE** to load it. A message confirms ("SAVED").
 
 GLOBAL, knob 3: **BLUE** (blue, white, yellow — default), **MONOCHROME** (black, white, pink), **CREAM** (brown,
 cream, white), **PLAYA** (the boot screen's sunset), **ROLO** (charcoal, cream, orange). Saved with the performance.
+
+## Bluetooth MIDI
+
+The FM-1 is always visible as a Bluetooth MIDI device (a computer, tablet or phone connects to it). To play it from a
+Bluetooth MIDI **keyboard**, press **OCT− and OCT+ together**: the BLUETOOTH page searches while it is open and nothing
+is connected. Knob 1 sets MODE (OFF, MANUAL, AUTO: reconnect to the last keyboard at power-on). SELECT picks a device,
+**SAVE** connects to it (or lets go of the one connected), **hold SAVE** forgets a remembered one. Remembered devices are
+white, new ones light. The mode is saved when you leave the page.
 
 ## Getting back
 

@@ -884,7 +884,7 @@ static __attribute__((noinline)) void op_press(uint32_t b, uint32_t held)
             op_clean &= ~BIT(b);
 #endif
         } else if ((held & (BIT(B_OCTDN) | BIT(B_OCTUP))) == (BIT(B_OCTDN) | BIT(B_OCTUP))) {   /* both OCT: the track <-> MASTER toggle when let go */
-            oct_both = (uint8_t)(oct_fold_here() || oct_master_ok());
+            oct_both = (uint8_t)(FELUCCA_PERF || oct_fold_here() || oct_master_ok());   /* (JTS22: the BLUETOOTH page) */
             oct_both_t = op_t0[panel.btn[b] % 14u];
             op_clean &= ~(BIT(B_OCTDN) | BIT(B_OCTUP));
         } else if (lay_is(LY_OPS)) {                    /* ENV held on FM6: the page back / on (op_fm6.c) */
@@ -1491,6 +1491,11 @@ static void ui_input(void)
     op_released((op_held | pressed) & ~held);           /* the chords, SAVE + REC, PLAY (op_combos.c) */
     if (oct_both && !(held & (BIT(B_OCTDN) | BIT(B_OCTUP)))) {   /* both OCT let go, nothing else used: track <-> MASTER */
         oct_both = 0;
+#if FELUCCA_PERF
+        if (1) {                                        /* JTS22: both OCT, the BLUETOOTH page (again: back to PERFORM) */
+            pf_go(ui.scr == SCR_PERF && pf_page == PG_BT ? PG_PERF : PG_BT);
+        } else
+#endif
         if (oct_fold_here()) {                          /* (a synth track's STEP: FOLD, a quick tap only; the user, 2026-10-16) */
             uint32_t a = op_btn_span(panel.btn[B_OCTDN], oct_both_t), c = op_btn_span(panel.btn[B_OCTUP], oct_both_t);
             if ((a > c ? a : c) < FOLD_TAP_MS) {        /* (to the last let go: the buttons' own times) */

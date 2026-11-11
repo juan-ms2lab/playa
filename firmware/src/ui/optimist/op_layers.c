@@ -148,6 +148,10 @@ static void lay_bits(void)
                                                          * inserts, no track's FX layer) */
         if (l == LY_MIX && !off)
             v |= (1u << panel.btn[B_PLAY]);
+#if FELUCCA_PERF
+        if (l != LY_STEP)
+            v = 0;                                      /* (JTS22: no button held opens Optimist's layers, the user, 2026-11-10) */
+#endif
         if (ly_bit[l] != v)
             ly_bit[l] = v;
     }
@@ -1125,6 +1129,10 @@ static void lay_pat_home(void)
 static void lay_frame(uint32_t held)
 {
     uint32_t l, h = LY_PLAY, off = (uint32_t)st_holding();
+#if FELUCCA_PERF
+    off = 1;                                            /* (JTS22: no layer held or locked, a page a button: op_perf.c) */
+    lay.lock = LY_PLAY;
+#endif
     lay_bits();
     for (l = LY_FX; l < LY_COUNT && !off; l++)
         if (LAYER_BTN[l] < NB && (held & (1u << panel.btn[LAYER_BTN[l]])) && (l != LY_OPS || fm6_sel()) &&

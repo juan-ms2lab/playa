@@ -11,6 +11,7 @@
  * mode, or the note a semitone (ALGORITHM: an octave): pf_enc. */
 static void track_select(uint32_t i);                   /* op_input.c */
 static void pfm_draw(void);                              /* op_perfdraw.c */
+static int pf_glo_frame(void);
 static void pf_seq_draw(void);
 #define PF_FULL (ui.scr == SCR_PERF || ui.scr == SCR_STEP)   /* (op_draw.c: the whole screen, no header, no cards) */
 static void cv_tall(uint32_t y, uint32_t h, uint16_t bg, void (*fn)(void));   /* op_graph.c */
@@ -34,8 +35,8 @@ static const uint8_t PF_FX[4] = {P_REV, P_CHOR, P_DLY, P_TFLT};
  * slots (SELECT one, SAVE tapped: stored, SAVE held: loaded). ENV and LFO draw their shape above the four boxes (the
  * user: "a graph with controls in four boxes in the bottom like the home screen"). ALGORITHM is the selected track's
  * level everywhere (pf_enc). PLAY, REC, SEQ: nothing (the sequencer is gone; a looper in v1.5). */
-enum { PG_PERF, PG_MIX, PG_FX, PG_ENV, PG_LFO, PG_EDIT, PG_ARP, PG_GLO, PG_SAVE, PG_N };
-static const char *const PG_NAME[PG_N] = {"PERFORM", "MIX", "FX", "ENVELOPE", "LFO", "EDIT", "ARP", "GLOBAL", "SAVE"};
+enum { PG_PERF, PG_MIX, PG_FX, PG_ENV, PG_LFO, PG_EDIT, PG_ARP, PG_GLO, PG_SAVE, PG_BT, PG_N };
+static const char *const PG_NAME[PG_N] = {"PERFORM", "MIX", "FX", "ENVELOPE", "LFO", "EDIT", "ARP", "GLOBAL", "SAVE", "BLUETOOTH"};
 static const page_t PG_BANKS[] = {
     {"ADSR", FAM_ENV, SC_TRACK, GR_ADSR, {P_ATK, P_DEC, P_SUS, P_REL}},
     {"LFO", FAM_LFO, SC_TRACK, GR_LFO, {P_LRATE, P_LWAVE, P_L1TRIG, P_L1POL}},
@@ -54,8 +55,8 @@ static const page_t PG_BANKS[] = {
     {"FILTER", FAM_FX, SC_TRACK, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},  /* (FX 5: the sweep and RESO, pfm_desc) */
 };
 /* (the user, 2026-11-10: "one screen for each fx (room size, delay ms etc)"; FX pressed again: the next) */
-static const uint8_t PG_B0[PG_N] = {0, 0, 10, 0, 1, 3, 5, 7, 0};  /* a page's first bank in PG_BANKS, and how many */
-static const uint8_t PG_BN[PG_N] = {0, 0, 5, 1, 2, 2, 2, 5, 0};   /* (GLOBAL's 4th and 5th: the knobs' CCs, pf_ccd) */
+static const uint8_t PG_B0[PG_N] = {0, 0, 10, 0, 1, 3, 5, 7, 0, 0};   /* a page's first bank in PG_BANKS, and how many */
+static const uint8_t PG_BN[PG_N] = {0, 0, 5, 1, 2, 2, 2, 5, 0, 0};    /* (GLOBAL's 4th and 5th: the knobs' CCs, pf_ccd) */
 #define PF_FXC(r) (pf_page == PG_FX && ((r) % 5u == 0u || (r) % 5u == 4u))   /* FX's own screens: SENDS, FILTER */
 #define PF_CC_ROW(r) (pf_page == PG_GLO && (r) % 5u >= 3u)   /* GLOBAL's CC 1-4, CC 5-8 (pf_ccd below) */
 #define PG_TRACKS(pg) ((pg) == PG_ENV || (pg) == PG_LFO || (pg) == PG_EDIT || (pg) == PG_ARP)   /* the selected track's */
@@ -69,6 +70,12 @@ static const page_t *pf_bank(uint32_t r)                /* the bank of row r on 
 }
 static uint32_t pfm_rows(void)
 {
+#if FELUCCA_BT_UI && BLE_CENTRAL
+    if (pf_page == PG_BT) {                             /* (BLUETOOTH: the devices heard and remembered, one at the least) */
+        uint32_t n = bt_rows(BT_MIDI);
+        return n ? n : 1u;
+    }
+#endif
     return pf_page == PG_PERF ? PFR_N : pf_page == PG_SAVE ? PROJ_SLOTS : PG_BN[pf_page] ? PG_BN[pf_page] : 1u;
 }
 static void pfm_name(uint32_t r, char *b)
@@ -80,6 +87,10 @@ static void op_engine_step(int32_t s);                  /* op_screens.c */
 static void pre_toast_engine(void);                     /* op_preset.c */
 static void pf_go(uint32_t pg)                          /* to page pg, its row as it was left */
 {
+#if FELUCCA_BT_UI
+    if (pf_page == PG_BT && pg != PG_BT)
+        sys_leave();                                    /* (BLUETOOTH left: its mode into the settings, as SYSTEM's) */
+#endif
     pf_prow[pf_page] = ui.row[SCR_PERF];
     pf_page = (uint8_t)(pg % PG_N);
     if (ui.scr != SCR_PERF)
@@ -156,6 +167,18 @@ static void pfm_cell(uint32_t r, uint32_t k, cell_t *c)
         cell_param(c, &PF_THEME_D, &pf_thv);
         return;
     }
+#if FELUCCA_BT_UI && BLE_CENTRAL
+    if (pf_page == PG_BT) {                             /* BLUETOOTH: KNOB 1 the MODE (OFF, MAN, AUTO: op_bt.c) */
+        static const char *const N_BTM[] = {"OFF", "MANUAL", "AUTO"};
+        static const param_desc_t BTM_D = PE("MODE", N_BTM, 1);
+        static int16_t v;
+        if (k != 0u)
+            return;
+        v = (int16_t)bt_mode(BT_MIDI);
+        cell_param(c, &BTM_D, &v);
+        return;
+    }
+#endif
     if (PF_CC_ROW(r)) {                                 /* (a knob's CC: its number, OFF at 0) */
         uint32_t i = (r % 5u - 3u) * 4u + (k & 3u);
         pf_ccv = perf.cc[i];
@@ -189,6 +212,14 @@ static void pfm_turn(uint32_t r, uint32_t k, int32_t s, int fine)
         ui.sig[2] = 0;
         return;
     }
+#if FELUCCA_BT_UI && BLE_CENTRAL
+    if (pf_page == PG_BT) {
+        if (k == 0u)
+            bt_mode_set(BT_MIDI, s);                    /* (a detent a mode, sys_dirty: saved when the page is left) */
+        ui.sig[2] = 0;
+        return;
+    }
+#endif
     if (PF_CC_ROW(r)) {
         uint32_t i = (r % 5u - 3u) * 4u + (k & 3u);
         pf_ccv = perf.cc[i];
@@ -289,8 +320,22 @@ static int pf_tap(uint32_t b, int hold)
         op_enter(SCR_STEP);
         return 1;
     case B_ARP: pf_page_tap(PG_ARP); return 1;
-    case B_GLO: pf_page_tap(PG_GLO); return 1;
+    case B_GLO:
+        if (!hold)
+            pf_page_tap(PG_GLO);                        /* (held: the PLAYA screen, then the credits; op_perfdraw.c pf_glo_frame) */
+        return 1;
     case B_SAVE:
+#if FELUCCA_BT_UI && BLE_CENTRAL
+        if (ui.scr == SCR_PERF && pf_page == PG_BT) {   /* BLUETOOTH: SAVE connects to the row (or lets go), held forgets */
+            bt.pcur = (uint8_t)ui.row[SCR_PERF];
+            if (hold)
+                bt_forget(BT_MIDI);
+            else
+                bt_save(BT_MIDI);
+            ui.sig[2] = 0;
+            return 1;
+        }
+#endif
         if (ui.scr != SCR_PERF || pf_page != PG_SAVE)
             pf_go(PG_SAVE);
         else if (!hold)
@@ -314,6 +359,6 @@ static int pf_tap(uint32_t b, int hold)
 /* the button of the page shown, lit (op_input.c op_screen_btn) */
 static uint32_t pf_btn(void)
 {
-    static const uint8_t B[PG_N] = {B_HOME, B_SCL, B_FX, B_ENV, B_LFO, B_EDIT, B_ARP, B_GLO, B_SAVE};
+    static const uint8_t B[PG_N] = {B_HOME, B_SCL, B_FX, B_ENV, B_LFO, B_EDIT, B_ARP, B_GLO, B_SAVE, B_OCTUP};
     return ui.scr == SCR_STEP ? B_SEQ : B[pf_page % PG_N];
 }

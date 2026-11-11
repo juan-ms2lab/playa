@@ -254,6 +254,46 @@ static void pf_paint_save(uint32_t r)
     }
     AA_MID(0, 210, 240, 24, PS, "SAVE: STORE   HOLD SAVE: LOAD", PF_PILL, PF_BG);
 }
+#if FELUCCA_BT_UI && BLE_CENTRAL
+/* BLUETOOTH (both OCT; the user, 2026-11-10: "there is no way to pair bluetooth midi in"): the state, the devices heard and
+ * remembered (op_bt.c, the scan on while this page shows with no link), MODE on KNOB 1, SAVE connects, SAVE held forgets */
+static void pf_paint_bt(uint32_t r)
+{
+    char nm[BLE_NAME_MAX + 1u], st[40];
+    const char *tag;
+    int32_t bars;
+    uint32_t n = bt_rows(BT_MIDI), first = r < 2u ? 0u : r - 1u, i, s = ble_dev_status();
+    int linked = bt_linked(BT_MIDI);
+    str_cpy(st, s < 9u ? BLE_ST[s] : "?", sizeof st);
+    if (linked) {
+        bt_last_name(BT_MIDI, nm);
+        str_cpy(st, nm, sizeof st);                     /* (connected: the device's name) */
+    }
+    aa_box(0, 40, 240, 30, 15, linked ? PF_SEL : PF_TAG, PF_BG);
+    AA_MID(0, 40, 240, 30, PS, linked ? st : bt_mode(BT_MIDI) ? st : "BLUETOOTH MIDI OFF", PF_BG, linked ? PF_SEL : PF_TAG);
+    for (i = 0; i < 3u && first + i < n; i++) {
+        uint32_t k = first + i;
+        uint16_t pc;
+        int32_t y = 76 + (int32_t)i * 36, tw;
+        bt_row(BT_MIDI, k, nm, &tag, &bars);
+        pc = k == r ? PF_SEL : tag[0] ? PF_PILL : PF_TAG;   /* (remembered or linked: white; new: light) */
+        aa_box(0, y, 240, 34, 17, pc, PF_BG);
+        tw = tag[0] ? aa_w(&AF_PS, tag) + 14 : 0;
+        if (aa_w(&AF_PM, nm) <= 220 - tw)
+            aa_mid(14, y, aa_w(&AF_PM, nm), 34, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, PF_BG, pc);
+        else
+            aa_mid(14, y, aa_w(&AF_PS, nm), 34, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, PF_BG, pc);
+        if (tag[0])
+            AA_MID(226 - tw, y, tw, 34, PS, tag, PF_BG, pc);
+    }
+    if (!n && bt_mode(BT_MIDI) && !linked)
+        AA_MID(0, 76, 240, 34, PS, "NOTHING FOUND YET", PF_PILL, PF_BG);
+    pf_boxes(r);                                        /* (KNOB 1: MODE) */
+    aa_box(61, PF_BOX_Y, 179, 240 - PF_BOX_Y, 10, PF_TAG, PF_BG);
+    AA_MID(61, PF_BOX_Y + 4, 179, 22, PS, "SAVE: CONNECT", PF_BG, PF_TAG);
+    AA_MID(61, PF_BOX_Y + 26, 179, 22, PS, "HOLD SAVE: FORGET", PF_BG, PF_TAG);
+}
+#endif
 static void pf_paint_page(void)
 {
     static const char *const TN[NTRK] = {"LAYER A", "LAYER B", "PLAYER", "DRUMS"};
@@ -273,6 +313,12 @@ static void pf_paint_page(void)
         pf_paint_save(r);
         return;
     }
+#if FELUCCA_BT_UI && BLE_CENTRAL
+    if (pf_page == PG_BT) {
+        pf_paint_bt(r);
+        return;
+    }
+#endif
     if (PG_TRACKS(pf_page) && is_drum(TSEL)) {
         aa_box(0, 92, 240, 40, 20, PF_PILL, PF_BG);
         AA_MID(0, 92, 240, 40, PM, "LAYERS ONLY", PF_BG, PF_PILL);
@@ -330,6 +376,19 @@ static void pfm_draw(void)
         for (k = 0; k < PROJ_SLOTS; k++)
             h = hu(h, (uint32_t)project_slot_used(k));
     h = hu(hu(hu(h, (uint32_t)(uint16_t)TSEL->p[P_LWAVE]), perf.theme), nn_vis ? nn_hash() + 1u : 0u);   /* (the chord shown) */
+#if FELUCCA_BT_UI && BLE_CENTRAL
+    if (pf_page == PG_BT) {                             /* (the devices and the state change by themselves) */
+        char nm[BLE_NAME_MAX + 1u];
+        const char *tag;
+        int32_t bars;
+        uint32_t n = bt_rows(BT_MIDI), j;
+        h = hu(hu(hu(h, n), ble_dev_status()), bt_mode(BT_MIDI) + 4u * (uint32_t)bt_linked(BT_MIDI));
+        for (j = 0; j < n && j < 8u; j++) {
+            bt_row(BT_MIDI, j, nm, &tag, &bars);
+            h = hu(hu(h, (uint32_t)nm[0] | (uint32_t)nm[1] << 8), (uint32_t)tag[0]);
+        }
+    }
+#endif
     h = hu(hu(hu(h, r), trk[0].engine | (uint32_t)trk[1].engine << 8),
            perf.mode | (uint32_t)perf.split << 8 | (uint32_t)perf.width << 16 | (uint32_t)perf.rev << 24);
     if (ui.sig[2] == h)
@@ -393,4 +452,43 @@ static void pf_seq_draw(void)
         return;
     ui.sig[2] = h;
     cv_tall(0, PF_H, PF_BG, pf_seq_paint);
+}
+
+/* ---- GLO held (the user, 2026-11-10): the PLAYA boot screen while it is held, let go: the credits and COWDOG for a second,
+ * then the page as it was (op_draw.c op_frame_draw asks first; the GLO tap's page: pf_tap, not when held) */
+static void boot_splash(void);                          /* ui/splash.c */
+static void pf_credits_paint(void)
+{
+    static const char *const L[] = {"created by JFS", "with help from Claude", "built on Optimist", "by w0ts and contributors",
+                                    "SLOOP, Felucca, Melodee", "Golana, Clipper, X0X", "Inter Tight font"};
+    uint32_t i;
+    AA_MID(0, 4, 240, 44, PL, "PLAYA", PF_SEL, PF_BG);
+    AA_MID(0, 46, 240, 22, PS, "JTS22", PF_PILL, PF_BG);
+    for (i = 0; i < sizeof L / sizeof L[0]; i++)
+        AA_MID(0, 72 + (int32_t)i * 18, 240, 18, PS, L[i], i < 2u ? PF_PILL : PF_TAG, PF_BG);
+    aa_box(30, 196, 180, 40, 20, PF_PILL, PF_BG);
+    AA_MID(30, 196, 180, 40, PM, "COWDOG", PF_BG, PF_PILL);
+}
+static int pf_glo_frame(void)                           /* 1: this frame is the PLAYA screen or the credits */
+{
+    static uint8_t st;                                  /* 0 none, 1 the PLAYA screen (held), 2 the credits */
+    static uint32_t t0, until;
+    int held = btn_held(B_GLO);
+    if (held && !t0)
+        t0 = fm1_ms | 1u;
+    if (!held)
+        t0 = 0;
+    if (st == 0 && held && fm1_ms - t0 >= op_hold_ms()) {
+        st = 1;
+        boot_splash();
+    } else if (st == 1 && !held) {
+        st = 2;
+        until = fm1_ms + 1000u;
+        cv_tall(0, 240, PF_BG, pf_credits_paint);
+    } else if (st == 2 && (int32_t)(fm1_ms - until) >= 0) {
+        st = 0;
+        memset(ui.sig, 0, sizeof ui.sig);               /* (the page again, whole) */
+        ui.force = 1;
+    }
+    return st != 0;
 }

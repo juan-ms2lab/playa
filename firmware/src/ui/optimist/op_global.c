@@ -316,6 +316,10 @@ static uint32_t bt_page(void)                           /* 0: not a Bluetooth pa
 {
     uint32_t e;
     const char *nm;
+#if FELUCCA_PERF
+    if (ui.scr == SCR_PERF && pf_page == PG_BT)
+        return 1u + BT_MIDI;                            /* (JTS22's BLUETOOTH page: the MIDI side's scan and list, op_bt.c) */
+#endif
     if (dev_listing())
         return 1u + dev_side();                         /* (the list: its page's side) */
     if (ui.scr != SCR_SYSTEM || GL_DEV || ui.row[SCR_SYSTEM] >= gl_n(1))
