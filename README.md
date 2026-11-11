@@ -9,7 +9,8 @@
 
 ---
 
-PLAYA turns the FM-1 into a live instrument: two synth layers on one keyboard (layered, split, crossfaded or single),
+PLAYA turns the FM-1 into a live instrument: two synth layers on one keyboard (layered, split, crossfaded or single —
+out of the box a Juno string pad layered with an FM electric piano, and an 808 kit),
 a drum kit with a simple step sequencer, send effects, and a high-contrast interface where every panel button opens
 one page and the four knobs always do what the screen shows.
 
@@ -43,7 +44,9 @@ new interface. Unofficial: not made, endorsed or supported by M-VAVE or by the O
 - **Bluetooth MIDI in both ways:** the FM-1 is a Bluetooth MIDI device, and it pairs with Bluetooth MIDI keyboards on
   its BLUETOOTH page (OCT− and OCT+ together).
 - **Five colour themes:** PLAYA (default), BLUE, MONOCHROME, CREAM and ROLO.
-- **Save / load** whole performances (both layers, split, effects, drums, theme) in the flash's slots.
+- **Save / load** whole performances (both layers, split, effects, drums, theme, knob CCs) in the flash's slots; hold
+  SAVE on an empty slot for a new one.
+- **Hold GLO** for two seconds for the PLAYA screen and the credits.
 
 <p align="center">
   <img src="docs/img/playa-mix.png" alt="MIX: four tall level cards" width="180">

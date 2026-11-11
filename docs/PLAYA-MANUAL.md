@@ -12,6 +12,12 @@ This page covers everything PLAYA changes; the sounds, engines and effects thems
 - **ALGORITHM** steps the selected track's engine (on DRUMS: the kit). **PRESETS** picks its sound.
 - The lit button is the page you are on.
 
+## A new performance
+
+A new install, or holding SAVE on an empty slot, starts with: **JUNO STRNG** on layer A, **FM6 STAGE EP** on layer B,
+**LAYER** mode (both on every key, split note C4 kept for SPLIT and BLEND), the **808** kit, the **PLAYA** theme and
+the controller knobs on CC 70–77.
+
 ## The panel
 
 | Button | Page | What is on it |
@@ -53,7 +59,7 @@ SELECT moves down the screen: **LAYER A → MODE → NOTE → LAYER B → DRUMS*
 | **BLEND** | A low, B high, and both crossfaded over WIDTH semitones around the split (equal power; WIDTH 0 = SPLIT) |
 | **SINGLE** | A alone (B kept, dimmed) |
 
-Default: BLEND at C4, 12 semitones. The note shows light when the mode does not use it.
+Default: LAYER; the split at C4 with a 12-semitone blend when you switch to SPLIT or BLEND. The note shows light when the mode does not use it.
 
 ## MIDI
 
