@@ -84,7 +84,11 @@ static uint8_t sync_reload;                  /* engine / preset / project / user
 #endif
 #if FELUCCA_ENG_FM6 && FELUCCA_FM6_PK_KEYS
 #define TRK_DEF_PAD2 {ENG_UID_FM6, 0}
+#if FELUCCA_PERF
+#define TRK_DEF_VOICE2 1u                            /* (JTS22 PLAYA, layer B: FM6 STAGE EP, the KEYS pack's first; the user, 2026-11-10) */
+#else
 #define TRK_DEF_VOICE2 5u                            /* (T2's FM6 VOICE: GLASS EP) */
+#endif
 #else
 #define TRK_DEF_PAD2 {1, 0}                          /* DIGITAL RHODES */
 #endif
@@ -93,7 +97,12 @@ static uint8_t sync_reload;                  /* engine / preset / project / user
 #else
 #define TRK_DEF_PAD3 TRK_DEF_LEAD
 #endif
-static const uint8_t TRK_DEF[NPART][2] = {{0, 4}, TRK_DEF_PAD2, TRK_DEF_PAD3,   /* ANALOG ACID 303, FM6 GLASS EP, DIGITAL GLASS PAD */
+#if FELUCCA_PERF && FELUCCA_ENG_JUNO
+#define TRK_DEF_LEAD1 {ENG_UID_JUNO, 1}              /* (JTS22 PLAYA, layer A: JUNO STRNG; the user, 2026-11-10) */
+#else
+#define TRK_DEF_LEAD1 {0, 4}
+#endif
+static const uint8_t TRK_DEF[NPART][2] = {TRK_DEF_LEAD1, TRK_DEF_PAD2, TRK_DEF_PAD3,   /* ANALOG ACID 303, FM6 GLASS EP, DIGITAL GLASS PAD */
 #if NPART > 3
                                           {0, 13},  /* (no drums: track 4, ANALOG WARM PAD) */
 #endif

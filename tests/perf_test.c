@@ -277,10 +277,10 @@ static void t_store(void)
         ;
     rec[i + 2u] = 9;                                     /* (a damaged MODE) */
     fxr_decode(rec, n, 1);
-    check(perf.mode == PERF_BLEND && perf.split == 60 && perf.width == 12 && !perf.rev, "a damaged value: the default split");
+    check(perf.mode == PERF_LAYER && perf.split == 60 && perf.width == 12 && !perf.rev, "a damaged value: the default split (LAYER)");
     set(PERF_HARD, 48, 7, 1);
     fxr_decode(rec, FXR_HEAD, 1);                        /* (a record of before: no PERF TLV) */
-    check(perf.mode == PERF_BLEND && perf.split == 60, "a project from before: the default split");
+    check(perf.mode == PERF_LAYER && perf.split == 60, "a project from before: the default split (LAYER)");
 }
 static void t_keys(void)
 {

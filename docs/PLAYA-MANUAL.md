@@ -86,7 +86,8 @@ CPU guard sheds the quietest voices first. Tip: set each layer's VOICES (EDIT) t
 ## SAVE
 
 SELECT a slot, **tap SAVE** to store the whole performance there (both layers, mode, split, FX, drums, theme), **hold
-SAVE** to load it. A message confirms ("SAVED").
+SAVE** to load it. A message confirms ("SAVED"). Holding SAVE on an **EMPTY** slot starts a new performance there with
+the defaults: JUNO STRNG on layer A, FM6 STAGE EP on layer B, LAYER mode, the 808 kit, the PLAYA theme.
 
 ## Themes
 

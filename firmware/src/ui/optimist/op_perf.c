@@ -342,10 +342,9 @@ static int pf_tap(uint32_t b, int hold)
             pf_go(PG_SAVE);
         else if (!hold)
             (void)prj_save_go(ui.row[SCR_PERF] % PROJ_SLOTS);   /* (SAVE tapped on SAVE: stored, "SAVED") */
-        else if (project_slot_used(ui.row[SCR_PERF] % PROJ_SLOTS))
-            prj_load_go(ui.row[SCR_PERF] % PROJ_SLOTS);         /* (held: that performance back) */
         else
-            ui_message("EMPTY SLOT");
+            prj_load_go(ui.row[SCR_PERF] % PROJ_SLOTS);         /* (held: that performance back; an empty slot: a new one
+                                                                 * there, the defaults: "NEW PROJECT", op_edits.c) */
         ui.sig[2] = 0;
         return 1;
     case B_HOME: pf_page_tap(PG_PERF); return 1;
