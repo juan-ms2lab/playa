@@ -41,11 +41,13 @@ WASM_LINK = ["-sSTANDALONE_WASM=1", "--no-entry", "-sALLOW_MEMORY_GROWTH=0",
              "-sINITIAL_MEMORY=16MB", "-sSTACK_SIZE=262144", "-sFILESYSTEM=0", "-sSUPPORT_LONGJMP=wasm"]
 
 
-def sim_config(path):
+def sim_config(path, voices=None):
     """-> (cfg, name, notes): the configuration with SIM_FORCE applied, validated by the builder's own rules"""
     cfg, name = configure.load(path) if path else (configure.defaults(), "default")
-    forced = [f"{k}={v}" for k, v in SIM_FORCE.items() if k in cfg and cfg[k] != v]
-    cfg = dict(cfg, **{k: v for k, v in SIM_FORCE.items() if k in cfg})
+    # --voices: the host's CPU, not the AC79's: the CPU guard's model (measured on the FM-1) off
+    force = dict(SIM_FORCE, **({"CPU_GUARD": 0} if voices else {}))
+    forced = [f"{k}={v}" for k, v in force.items() if k in cfg and cfg[k] != v]
+    cfg = dict(cfg, **{k: v for k, v in force.items() if k in cfg})
     err, _warn, _note = configure.validate(cfg)
     if err:
         raise SystemExit("sim: configuration: " + "; ".join(err))
@@ -73,11 +75,13 @@ def overlay(gen):
     return p
 
 
-def compile_sim(gen, out, wasm):
+def compile_sim(gen, out, wasm, voices=None):
     src = ["-Xclang", "-ivfsoverlay", "-Xclang", str(overlay(gen)), "-I", str(ROOT / "firmware" / "sim" / "hal"),
            "-I", str(ROOT / "firmware" / "hal"),
            "-I", str(ROOT / "firmware" / "src"), "-I", str(gen), "-include", str(gen / "felucca_config.h")]
     main = str(ROOT / "firmware" / "sim" / "sim.c")
+    if voices:
+        src += [f"-DFELUCCA_HOST_VOICES={voices}"]
     if wasm:
         emcc = shutil.which("emcc")
         if not emcc:
@@ -97,8 +101,10 @@ def main(argv=None):
     b.add_argument("--config", help="a .config (default: the defaults)")
     b.add_argument("--out", help="the output (default build/sim/sim or build/sim/sim.wasm)")
     b.add_argument("--wasm", action="store_true", help="WebAssembly with emcc (a standalone sim.wasm)")
+    b.add_argument("--voices", type=int, choices=range(1, 25), metavar="1-24",
+                   help="the voices shared by the parts (a host's CPU: the iPad build 24; default the firmware's, 12 under PERF)")
     a = ap.parse_args(argv)
-    cfg, name, forced = sim_config(a.config)
+    cfg, name, forced = sim_config(a.config, a.voices)
     work = ROOT / "build" / "sim"
     gen = work / "gen"
     if forced:
@@ -106,7 +112,7 @@ def main(argv=None):
     generate(cfg, name, gen)
     out = Path(a.out) if a.out else work / ("sim.wasm" if a.wasm else "sim")
     out.parent.mkdir(parents=True, exist_ok=True)
-    compile_sim(gen, out, a.wasm)
+    compile_sim(gen, out, a.wasm, a.voices)
     print(f"sim: {out}")
     return 0
 

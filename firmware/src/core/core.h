@@ -10,7 +10,11 @@
 #define NVOICE 8                 /* voices per part, and the budget shared by all parts */
 /* PERF: the parts share more than one part's voices (two layers at once): 12 of the 24; the CPU guard still caps it
  * under load (cpuguard.h vcap). A constant for now; a GLO setting once the hardware's headroom is measured */
+#ifdef FELUCCA_HOST_VOICES   /* a host's simulator (tools/sim.py --voices, the iPad: JTS22, 2026-11-10): its CPU, more voices */
+#define VBUDGET ((uint32_t)FELUCCA_HOST_VOICES)
+#else
 #define VBUDGET (FELUCCA_PERF ? 12u : (uint32_t)NVOICE)
+#endif
 /* a 1 MiB part the firmware knows: the Puya P25Q80H (0x856014), and (PLAYA, FELUCCA_PERF) the UC25HQ80 of FM-1s sold
  * since autumn 2026 (0xB36014; thefirmwarehub.com: "same size (1 MiB), the same plain SPI NOR commands"), which an exact
  * match took for unknown: saves stayed in RAM (JTS22, 2026-11-10) */
