@@ -108,6 +108,15 @@ is connected. Knob 1 sets MODE (OFF, MANUAL, AUTO: reconnect to the last keyboar
 **SAVE** connects to it (or lets go of the one connected), **hold SAVE** forgets a remembered one. Remembered devices are
 white, new ones light. The mode is saved when you leave the page.
 
+## Installing and leaving
+
+PLAYA installs over M-VAVE's official firmware (V15) or another FM-1 firmware, and you can leave it again: its update
+loader installs the official V15 or any other firmware over it (tested 2026-11-10). Get it from the GitHub release
+(`playa-0.1.fwsc`) or The Firmware Hub. Back up first: installing over another firmware may erase its projects.
+
+**Newer FM-1s** (sold since autumn 2026, flash UC25HQ80): PLAYA saves on them too, where most Felucca-family firmwares
+keep everything in memory only. Not yet tried on such a unit: check that a saved performance survives a power-off.
+
 ## Getting back
 
 Back up before installing. If an install stops, install again; if the FM-1 does not start, hold **OCT−** while
