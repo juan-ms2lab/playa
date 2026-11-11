@@ -97,7 +97,10 @@ static BOOT_ORDER void recovery_main(void)
     recovery_last = recovery_usb_last = fm1_ticks();
     recovery_fraction = fm1_ms = 0;
     /* No persist_boot or OTA cleanup: no flash write just for entering rescue. */
-    flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;
+#ifndef FL_ID_OK
+#define FL_ID_OK(id) ((id) == 0x856014u)                /* (a test of this file alone: core.h's, the Puya part) */
+#endif
+    flash_ok = FL_ID_OK(FL_FAR(fl_jedec_ram)());
     if (flash_ok)
         dev_uid_read();                      /* (the name "FM1-XXXX" from the part's ID: no settings are read here) */
     lcd_init();

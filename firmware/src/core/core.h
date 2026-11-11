@@ -11,6 +11,10 @@
 /* PERF: the parts share more than one part's voices (two layers at once): 12 of the 24; the CPU guard still caps it
  * under load (cpuguard.h vcap). A constant for now; a GLO setting once the hardware's headroom is measured */
 #define VBUDGET (FELUCCA_PERF ? 12u : (uint32_t)NVOICE)
+/* a 1 MiB part the firmware knows: the Puya P25Q80H (0x856014), and (PLAYA, FELUCCA_PERF) the UC25HQ80 of FM-1s sold
+ * since autumn 2026 (0xB36014; thefirmwarehub.com: "same size (1 MiB), the same plain SPI NOR commands"), which an exact
+ * match took for unknown: saves stayed in RAM (JTS22, 2026-11-10) */
+#define FL_ID_OK(id) ((id) == 0x856014u || (FELUCCA_PERF && (id) == 0xB36014u))
 #define NPOLY 8
 /* FELUCCA_DRUMS 0 (the builder's DRUMS, 2026-10-26): no drum track and no drum code; track 4 is a fourth synth part */
 #ifndef FELUCCA_DRUMS

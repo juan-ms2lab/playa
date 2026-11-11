@@ -92,6 +92,10 @@ node tests/sim_perf_test.mjs                 # the layers, split, drums, pedal a
 The PLAYA tests are `tests/perf_test.c` (layers, split gains, note ownership, voice budget, knobs, storage) and
 `tests/sim_perf_test.mjs`. Every change was tried in the WebAssembly simulator before being flashed to a real FM-1.
 
+**Newer FM-1s.** Units sold since autumn 2026 carry a UC25HQ80 flash (JEDEC `0xB36014`) instead of the Puya P25Q80
+(`0x856014`). Optimist (and the other Felucca-family firmwares) take it for unknown and keep everything in RAM; PLAYA
+accepts it as the same 1 MiB part, so saving works (`FL_ID_OK`, `firmware/src/core/core.h`). Not yet tried on such a unit.
+
 **Known limits.** Optimist's release build, its release tests and its builder cost measurement need the private
 `fm1base` submodule; without access only the classic build is available (that is what PLAYA ships), and
 `tests/builder_test.py` reports the new `PERF` item as not measured. A few of Optimist's own host tests already fail

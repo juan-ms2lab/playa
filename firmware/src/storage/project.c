@@ -1644,7 +1644,7 @@ static void persist_boot(void)                    /* before settings_init / pane
     persist_t p;
     persist_v3_t p3;                               /* (a record of before PER4: read so, then turned into p) */
     uint32_t f = irq_save();
-    flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;       /* the expected 1 MiB part, else stay RAM-only */
+    flash_ok = FL_ID_OK(FL_FAR(fl_jedec_ram)());           /* a known 1 MiB part (hal/fm1_flash.h), else stay RAM-only */
     irq_restore(f);
     if (!flash_ok)
         return;
