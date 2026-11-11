@@ -20,7 +20,7 @@ typedef struct {
     uint8_t theme;                      /* the pages' colours (ui/optimist/op_perfdraw.c PF_THEMES): 0 blue, 1 monochrome, 2 cream, 3 playa, 4 rolo */
     uint8_t cc[8];                      /* the controller knobs' CCs, K1..K8 (perf_cc), 0 = off; GLOBAL > CC 1-4, CC 5-8 */
 } perf_t;
-#define PERF_DEFAULT {PERF_BLEND, 60, 12, 0, 0, {70, 71, 72, 73, 74, 75, 76, 77}}   /* (the CCs: an MPK mini 3's K1..K8) */
+#define PERF_DEFAULT {PERF_BLEND, 60, 12, 0, 3, {70, 71, 72, 73, 74, 75, 76, 77}}   /* (theme 3: PLAYA, the default: the user, 2026-11-10) */   /* (the CCs: an MPK mini 3's K1..K8) */
 #define PERF_NTHEME 5u  /* (spec: C4, a 12-semitone blend, A low / B high) */
 static perf_t perf = PERF_DEFAULT;
 static uint16_t perf_xg = 32768u;       /* the gain the next voice_start takes (unity outside a layered press) */
@@ -110,7 +110,7 @@ static int32_t perf_enc_take(uint32_t role)
 
 /* ---- the project's FX record (fx/fx_rec.c): PERF_TLV, 4 bytes MODE SPLIT WIDTH REV; none (or a damaged value) reads as
  * the defaults, so a project from before, or from a build without PERF, plays as the spec's default performance; a 5th
- * byte THEME (none: blue), then the eight knobs' CCs (none: 70..77) */
+ * byte THEME (none: PLAYA), then the eight knobs' CCs (none: 70..77) */
 #define PERF_TLV 0x4Fu
 #define PERF_TLV_N 13u
 static uint32_t perf_tlv(uint8_t *o)

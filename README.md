@@ -42,7 +42,7 @@ new interface. Unofficial: not made, endorsed or supported by M-VAVE or by the O
   wheel reach both layers.
 - **Bluetooth MIDI in both ways:** the FM-1 is a Bluetooth MIDI device, and it pairs with Bluetooth MIDI keyboards on
   its BLUETOOTH page (OCT− and OCT+ together).
-- **Five colour themes:** BLUE (default), MONOCHROME, CREAM, PLAYA and ROLO.
+- **Five colour themes:** PLAYA (default), BLUE, MONOCHROME, CREAM and ROLO.
 - **Save / load** whole performances (both layers, split, effects, drums, theme) in the flash's slots.
 
 <p align="center">

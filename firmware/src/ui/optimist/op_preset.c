@@ -408,11 +408,11 @@ static void pf_pop_paint(void)
         aa_box(12, ry + (POP_RH - 3) / 2 - 5, 10, 10, 5, ec, pc);        /* (the engine's colour) */
         tw = en[0] ? aa_w(&AF_PS, en) + 8 : 0;
         if (aa_w(&AF_PM, nm) <= 196 - tw)
-            aa_mid(30, ry, aa_w(&AF_PM, nm), POP_RH - 3, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, PF_BG, pc);
+            aa_mid(30, ry, aa_w(&AF_PM, nm), POP_RH - 3, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, pf_ink(pc), pc);
         else
-            aa_mid(30, ry, aa_w(&AF_PS, nm), POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, PF_BG, pc);
+            aa_mid(30, ry, aa_w(&AF_PS, nm), POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, pf_ink(pc), pc);
         if (en[0])
-            aa_mid(228 - tw, ry, tw - 8, POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, en, PF_BG, pc);
+            aa_mid(228 - tw, ry, tw - 8, POP_RH - 3, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, en, pf_ink(pc), pc);
     }
 }
 #endif

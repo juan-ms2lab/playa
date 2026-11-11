@@ -213,3 +213,6 @@ static const uint16_t PF_THEMES[PERF_NTHEME][4] = {
 #define PF_PILL PF_THEMES[perf.theme % PERF_NTHEME][1]
 #define PF_SEL PF_THEMES[perf.theme % PERF_NTHEME][2]
 #define PF_TAG PF_THEMES[perf.theme % PERF_NTHEME][3]
+/* the text on a fill: the screen's colour on the pills and the selection, black or white (the more contrast) on the light
+ * tone (the user, 2026-11-10: "too light a contrast in all colour schemes") */
+static uint16_t pf_ink(uint16_t fill) { return fill == PF_TAG ? ink_on(PF_TAG) : PF_BG; }

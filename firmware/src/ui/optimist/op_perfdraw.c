@@ -25,7 +25,7 @@ static void pf_sound(int32_t y, uint32_t t, const char *name, int sel, int dim)
     aa_box(0, y, 240, 38, 19, pc, PF_BG);                              /* (38 rows: the user, 2026-11-10, "2 pixels taller") */
     aa_box(7, y + 8, tw, 22, 11, ec, pc);
     AA_MID(7, y + 8, tw, 22, PS, eng, ink_on(ec), ec);
-    AA_MID(7 + tw, y, 240 - 14 - tw, 38, PM, name, PF_BG, pc);
+    AA_MID(7 + tw, y, 240 - 14 - tw, 38, PM, name, pf_ink(pc), pc);
 }
 /* the notes held on the keys and their chord (Optimist's op_chord.c: ch_name "Cm7", else nn_line's notes), shown a moment
  * after the keys as Optimist's corner did; the selection's colour, the large face where it fits */
@@ -39,7 +39,7 @@ static void pf_chord(int32_t x, int32_t y, int32_t w, int32_t h)
             nn_line(b, sizeof b, w);
     }
     if (!b[0]) {
-        AA_MID(x, y, w, h, PS, "-", PF_TAG, PF_BG);
+        AA_MID(x, y, w, h, PS, "-", PF_PILL, PF_BG);
         return;
     }
     if (aa_w(&AF_PM, b) <= w)
@@ -99,10 +99,10 @@ static void pf_paint_mix(void)
         }
         aa_box(x, 0, 57, (int32_t)PF_H, 12, cc, PF_BG);
         if (aa_w(&AF_PM, L[k]) <= 53)
-            AA_MID(x, 4, 57, 32, PM, L[k], PF_BG, cc);
+            AA_MID(x, 4, 57, 32, PM, L[k], pf_ink(cc), cc);
         else
-            AA_MID(x, 4, 57, 32, PS, L[k], PF_BG, cc);
-        AA_MID(x, 38, 57, 22, PS, c.label ? c.val : "-", PF_BG, cc);
+            AA_MID(x, 4, 57, 32, PS, L[k], pf_ink(cc), cc);
+        AA_MID(x, 38, 57, 22, PS, c.label ? c.val : "-", pf_ink(cc), cc);
         aa_box(x + 10, top, 37, hh, 8, cc == PF_TAG ? PF_PILL : PF_TAG, cc);   /* (off: an empty, light track) */
         if (f > 0)
             aa_box(x + 10, top + hh - f, 37, f, f < 16 ? f / 2 : 8, cc == PF_TAG ? PF_TAG : PF_BG, cc == PF_TAG ? PF_BG : PF_TAG);
@@ -114,7 +114,7 @@ static void pf_card(int32_t x, int32_t y, int32_t w, int32_t h, const cell_t *c)
     int32_t bx = x + 10, bw = w - 20, by = y + h - 14;
     aa_box(x, y, w, h, 12, PF_PILL, PF_BG);
     if (!c->label) {
-        AA_MID(x, y, w, h, PM, "-", PF_TAG, PF_PILL);
+        AA_MID(x, y, w, h, PM, "-", PF_BG, PF_PILL);
         return;
     }
     aa_text(x + 10, y + 6, &AF_PS, c->label, PF_BG, PF_PILL);
@@ -249,8 +249,8 @@ static void pf_paint_save(uint32_t r)
         else
             b[5] = (char)('1' + k), b[6] = 0;
         aa_box(0, y, 240, 36, 18, pc, PF_BG);
-        aa_text(16, y + 2, &AF_PM, b, PF_BG, pc);
-        AA_MID(130, y, 100, 36, PS, used ? "STORED" : "EMPTY", PF_BG, pc);
+        aa_text(16, y + 2, &AF_PM, b, pf_ink(pc), pc);
+        AA_MID(130, y, 100, 36, PS, used ? "STORED" : "EMPTY", pf_ink(pc), pc);
     }
     AA_MID(0, 210, 240, 24, PS, "SAVE: STORE   HOLD SAVE: LOAD", PF_PILL, PF_BG);
 }
@@ -269,8 +269,8 @@ static void pf_paint_bt(uint32_t r)
         bt_last_name(BT_MIDI, nm);
         str_cpy(st, nm, sizeof st);                     /* (connected: the device's name) */
     }
-    aa_box(0, 40, 240, 30, 15, linked ? PF_SEL : PF_TAG, PF_BG);
-    AA_MID(0, 40, 240, 30, PS, linked ? st : bt_mode(BT_MIDI) ? st : "BLUETOOTH MIDI OFF", PF_BG, linked ? PF_SEL : PF_TAG);
+    aa_box(0, 40, 240, 30, 15, linked ? PF_SEL : PF_PILL, PF_BG);   /* (full contrast: the user, 2026-11-10, "too light") */
+    AA_MID(0, 40, 240, 30, PS, linked ? st : bt_mode(BT_MIDI) ? st : "BLUETOOTH MIDI OFF", PF_BG, linked ? PF_SEL : PF_PILL);
     for (i = 0; i < 3u && first + i < n; i++) {
         uint32_t k = first + i;
         uint16_t pc;
@@ -280,18 +280,18 @@ static void pf_paint_bt(uint32_t r)
         aa_box(0, y, 240, 34, 17, pc, PF_BG);
         tw = tag[0] ? aa_w(&AF_PS, tag) + 14 : 0;
         if (aa_w(&AF_PM, nm) <= 220 - tw)
-            aa_mid(14, y, aa_w(&AF_PM, nm), 34, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, PF_BG, pc);
+            aa_mid(14, y, aa_w(&AF_PM, nm), 34, &AF_PM, AF_PM_CAP_Y, AF_PM_CAP_H, nm, pf_ink(pc), pc);
         else
-            aa_mid(14, y, aa_w(&AF_PS, nm), 34, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, PF_BG, pc);
+            aa_mid(14, y, aa_w(&AF_PS, nm), 34, &AF_PS, AF_PS_CAP_Y, AF_PS_CAP_H, nm, pf_ink(pc), pc);
         if (tag[0])
-            AA_MID(226 - tw, y, tw, 34, PS, tag, PF_BG, pc);
+            AA_MID(226 - tw, y, tw, 34, PS, tag, pf_ink(pc), pc);
     }
     if (!n && bt_mode(BT_MIDI) && !linked)
         AA_MID(0, 76, 240, 34, PS, "NOTHING FOUND YET", PF_PILL, PF_BG);
     pf_boxes(r);                                        /* (KNOB 1: MODE) */
-    aa_box(61, PF_BOX_Y, 179, 240 - PF_BOX_Y, 10, PF_TAG, PF_BG);
-    AA_MID(61, PF_BOX_Y + 4, 179, 22, PS, "SAVE: CONNECT", PF_BG, PF_TAG);
-    AA_MID(61, PF_BOX_Y + 26, 179, 22, PS, "HOLD SAVE: FORGET", PF_BG, PF_TAG);
+    aa_box(61, PF_BOX_Y, 179, 240 - PF_BOX_Y, 10, PF_PILL, PF_BG);
+    AA_MID(61, PF_BOX_Y + 4, 179, 22, PS, "SAVE: CONNECT", PF_BG, PF_PILL);
+    AA_MID(61, PF_BOX_Y + 26, 179, 22, PS, "HOLD SAVE: FORGET", PF_BG, PF_PILL);
 }
 #endif
 static void pf_paint_page(void)
@@ -414,7 +414,7 @@ static void pf_seq_paint(void)
         else
             b[1] = (char)('0' + bars % 10u);
         aa_box(130, 6, 64, 22, 11, PF_TAG, PF_PILL);
-        AA_MID(130, 6, 64, 22, PS, b, PF_BG, PF_TAG);
+        AA_MID(130, 6, 64, 22, PS, b, pf_ink(PF_TAG), PF_TAG);
         b[0] = (char)('1' + page % 10u), b[1] = '/', b[2] = (char)('0' + np % 10u), b[3] = 0;
         aa_box(198, 6, 36, 22, 11, PF_SEL, PF_PILL);
         AA_MID(198, 6, 36, 22, PS, b, PF_BG, PF_SEL);
@@ -465,30 +465,31 @@ static void pf_credits_paint(void)
     AA_MID(0, 4, 240, 44, PL, "PLAYA", PF_SEL, PF_BG);
     AA_MID(0, 46, 240, 22, PS, "JTS22", PF_PILL, PF_BG);
     for (i = 0; i < sizeof L / sizeof L[0]; i++)
-        AA_MID(0, 72 + (int32_t)i * 18, 240, 18, PS, L[i], i < 2u ? PF_PILL : PF_TAG, PF_BG);
+        AA_MID(0, 72 + (int32_t)i * 18, 240, 18, PS, L[i], i < 2u ? PF_SEL : PF_PILL, PF_BG);
     aa_box(30, 196, 180, 40, 20, PF_PILL, PF_BG);
     AA_MID(30, 196, 180, 40, PM, "COWDOG", PF_BG, PF_PILL);
 }
+#define PF_GLO_HOLD_MS 2000u                            /* (the user, 2026-11-10: "show after 2 seconds", "credits last for 3") */
+#define PF_CREDITS_MS 3000u
 static int pf_glo_frame(void)                           /* 1: this frame is the PLAYA screen or the credits */
 {
-    static uint8_t st;                                  /* 0 none, 1 the PLAYA screen (held), 2 the credits */
     static uint32_t t0, until;
     int held = btn_held(B_GLO);
     if (held && !t0)
-        t0 = fm1_ms | 1u;
+        t0 = fm1_ms ? fm1_ms : 1u;                      /* (the press's time; 0 = none. Not | 1: one ms ahead underflowed) */
     if (!held)
         t0 = 0;
-    if (st == 0 && held && fm1_ms - t0 >= op_hold_ms()) {
-        st = 1;
+    if (pf_glo_st == 0 && held && (int32_t)(fm1_ms - t0) >= (int32_t)PF_GLO_HOLD_MS) {
+        pf_glo_st = 1;
         boot_splash();
-    } else if (st == 1 && !held) {
-        st = 2;
-        until = fm1_ms + 1000u;
+    } else if (pf_glo_st == 1 && !held) {
+        pf_glo_st = 2;
+        until = fm1_ms + PF_CREDITS_MS;
         cv_tall(0, 240, PF_BG, pf_credits_paint);
-    } else if (st == 2 && (int32_t)(fm1_ms - until) >= 0) {
-        st = 0;
+    } else if (pf_glo_st == 2 && (int32_t)(fm1_ms - until) >= 0) {
+        pf_glo_st = 0;
         memset(ui.sig, 0, sizeof ui.sig);               /* (the page again, whole) */
         ui.force = 1;
     }
-    return st != 0;
+    return pf_glo_st != 0;
 }

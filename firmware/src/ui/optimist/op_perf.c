@@ -12,6 +12,7 @@
 static void track_select(uint32_t i);                   /* op_input.c */
 static void pfm_draw(void);                              /* op_perfdraw.c */
 static int pf_glo_frame(void);
+static uint8_t pf_glo_st;                               /* GLO held: 0 none, 1 the PLAYA screen, 2 the credits (op_perfdraw.c) */
 static void pf_seq_draw(void);
 #define PF_FULL (ui.scr == SCR_PERF || ui.scr == SCR_STEP)   /* (op_draw.c: the whole screen, no header, no cards) */
 static void cv_tall(uint32_t y, uint32_t h, uint16_t bg, void (*fn)(void));   /* op_graph.c */
@@ -101,7 +102,7 @@ static void pf_go(uint32_t pg)                          /* to page pg, its row a
 /* GLOBAL's THEME (KNOB 3 on its first bank; the user, 2026-11-10: "blue white yellow is default, but add a black,
  * white, pink and a cream brown white") */
 static const char *const N_PFTHEME[] = {"BLUE", "MONOCHROME", "CREAM", "PLAYA", "ROLO"};
-static const param_desc_t PF_THEME_D = PE("THEME", N_PFTHEME, 0);
+static const param_desc_t PF_THEME_D = PE("THEME", N_PFTHEME, 3);   /* (PLAYA the default) */
 static int16_t pf_thv;
 #define PF_THEME_CELL(r, k) (pf_page == PG_GLO && (r) == 0u && (k) == 2u)
 /* GLOBAL's CC 1-4, CC 5-8: the controller knobs' CCs (perf.cc, io/midi/perf.c), named by what each knob does */
@@ -321,8 +322,9 @@ static int pf_tap(uint32_t b, int hold)
         return 1;
     case B_ARP: pf_page_tap(PG_ARP); return 1;
     case B_GLO:
-        if (!hold)
-            pf_page_tap(PG_GLO);                        /* (held: the PLAYA screen, then the credits; op_perfdraw.c pf_glo_frame) */
+        (void)hold;
+        if (!pf_glo_st)
+            pf_page_tap(PG_GLO);                        /* (held 2 s: the PLAYA screen, then the credits instead; pf_glo_frame) */
         return 1;
     case B_SAVE:
 #if FELUCCA_BT_UI && BLE_CENTRAL

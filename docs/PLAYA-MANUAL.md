@@ -29,7 +29,7 @@ This page covers everything PLAYA changes; the sounds, engines and effects thems
 | **PLAY** | — | starts / stops the drum sequencer |
 | **OCT− / OCT+** | — | the keyboard octave; on SEQ the bar shown |
 | **OCT− + OCT+** together | BLUETOOTH | pair Bluetooth MIDI keyboards (again: back to PERFORM) |
-| **GLO held** | — | the PLAYA screen; let go: the credits for a second |
+| **GLO held 2 s** | — | the PLAYA screen; let go: the credits for 3 seconds |
 | **REC** | — | nothing yet (the looper: v1.5) |
 
 On the ENV, LFO, EDIT and ARP pages the selected track is shown top right in its engine's colour; they do nothing on
@@ -90,8 +90,8 @@ SAVE** to load it. A message confirms ("SAVED").
 
 ## Themes
 
-GLOBAL, knob 3: **BLUE** (blue, white, yellow — default), **MONOCHROME** (black, white, pink), **CREAM** (brown,
-cream, white), **PLAYA** (the boot screen's sunset), **ROLO** (charcoal, cream, orange). Saved with the performance.
+GLOBAL, knob 3: **PLAYA** (the boot screen's sunset — default), **BLUE** (blue, white, yellow), **MONOCHROME** (black,
+white, pink), **CREAM** (brown, cream, white), **ROLO** (charcoal, cream, orange). Saved with the performance.
 
 ## Bluetooth MIDI
 

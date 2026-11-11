@@ -774,7 +774,7 @@ static void pf_modal_paint(void)                        /* JTS22: the question a
         AA_MID(4, 6 + (MODAL_H - 50) / 2, 232, (MODAL_H - 50) / 2, PS, a, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
     }
     aa_box(14, MODAL_H - 42, 100, 30, 15, PF_TAG, ui.arm_danger ? PF_SEL : PF_PILL);
-    AA_MID(14, MODAL_H - 42, 100, 30, PS, "HOME: NO", PF_BG, PF_TAG);
+    AA_MID(14, MODAL_H - 42, 100, 30, PS, "HOME: NO", pf_ink(PF_TAG), PF_TAG);
     aa_box(126, MODAL_H - 42, 100, 30, 15, PF_BG, ui.arm_danger ? PF_SEL : PF_PILL);
     AA_MID(126, MODAL_H - 42, 100, 30, PS, "SAVE: YES", PF_PILL, PF_BG);
 }
@@ -910,7 +910,30 @@ static void code_paint(void)                            /* (once a pass: draw_co
     cv_text_mid((int32_t)MODAL_H / 2 - 10, fl, d, C_WHITE);
     cv_text_mid(MODAL_H - 26, &FONT_S, nm, C_GRAY);
 }
-static void draw_code(void) { cv_whole(OP_PY, MODAL_H, C_BLACK, code_paint); }
+#if FELUCCA_PERF
+static void pf_code_paint(void)                         /* JTS22: the code large on a pill, the device's name under it */
+{
+    char d[7], nm[BLE_NAME_MAX + 12u];
+    pk_digits(d, ble_connect_passkey());
+    str_cpy(nm, "TYPE IT ON ", sizeof nm);
+    ble_connect_name(nm + str_len(nm));
+    cv_rect(0, 0, 240, MODAL_H, PF_BG);
+    aa_box(4, 2, 232, MODAL_H - 4, 16, PF_PILL, PF_BG);
+    AA_MID(4, 6, 232, 24, PS, "BLUETOOTH CODE", PF_BG, PF_PILL);
+    AA_MID(4, 30, 232, MODAL_H - 64, PL, d, PF_BG, PF_PILL);
+    AA_MID(4, MODAL_H - 34, 232, 24, PS, nm, PF_BG, PF_PILL);
+}
+#endif
+static void draw_code(void)
+{
+#if FELUCCA_PERF
+    if (PF_FULL) {
+        cv_whole(60, MODAL_H, PF_BG, pf_code_paint);
+        return;
+    }
+#endif
+    cv_whole(OP_PY, MODAL_H, C_BLACK, code_paint);
+}
 #else
 #define op_code_on() 0
 #define ble_code_sig() 0u
