@@ -124,7 +124,7 @@ switching on and install again, or return to the official firmware ([guide/getti
 
 ## On an iPad (the simulator)
 
-PLAYA also runs in the simulator of the Optimist iPad / Mac app: the same firmware, its screen, panel buttons and 27 keys
+PLAYA also runs in the simulator of the **Optimist Mirror** app (iPad, iPhone, Mac): the same firmware, its screen, panel buttons and 27 keys
 on the touch screen, no FM-1 needed. Download `playa-0.1-ipad.wasm` from the GitHub release (Safari: save to Files),
 then in the app open **Simulator**, the build list, **pick a file**. Presets are saved in the app.
 This build lifts the 12-voice limit the FM-1 needs (`tools/sim.py build --wasm --voices 24`); each layer keeps its
