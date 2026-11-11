@@ -1,7 +1,9 @@
 {
-  "what": "A performance firmware built on Optimist: two synth layers on one keyboard (layer, split, blend or single), drums with a simple step sequencer, send effects, Bluetooth MIDI keyboards, and one bold screen a button with knobs 1-4 always on what you see. 5 engines, 32 drum kits, 135 presets.",
+  "what": "A performance firmware built on Optimist: two synth layers on one keyboard (layer, split, blend or single), drums with a simple step sequencer, send effects, Bluetooth MIDI keyboards, and one easy to read screen with knobs 1-4 to edit all parameters. 5 engines, 32 drum kits, 135 presets.",
   "author": "JFS",
-  "kinds": ["synth"],
+  "kinds": [
+    "synth"
+  ],
   "cheat": "https://github.com/juan-ms2lab/playa/blob/playa/docs/PLAYA-MANUAL.md",
   "image": "docs/img/playa-splash.png",
   "color": "#3A1C6B"
