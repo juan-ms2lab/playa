@@ -135,3 +135,5 @@ No warranty. Each file PLAYA adds says so in its header; the Optimist files it c
 comments where they were changed (2026-11-10). If you distribute a build, give its source under the same licence.
 M-VAVE and FM-1 are trademarks of their owners; product names (Prophet-5, DX7, Juno, Roland) only say what an engine
 or a colour scheme is inspired by.
+
+You can also try PLAYA in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
